@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from '../firebase';
+import {
+  auth, googleProvider,
+  signInWithPopup, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, updateProfile, sendPasswordResetEmail
+} from '../firebase';
 
 export default function AuthScreen({ onGuest }) {
-  const [mode, setMode] = useState('signin');
+  const [mode, setMode] = useState('signin'); // signin | signup | forgot
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  function reset(m) {
+    setMode(m); setError(''); setSuccess('');
+    setEmail(''); setPassword(''); setName('');
+  }
 
   async function handleGoogle() {
     setError(''); setLoading(true);
@@ -24,37 +34,78 @@ export default function AuthScreen({ onGuest }) {
     try {
       if (mode === 'signup') {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        if (name.trim()) {
-          await updateProfile(cred.user, { displayName: name.trim() });
-        }
+        if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (e) {
-      const msg =
+      setError(
         e.code === 'auth/invalid-credential' ? 'Invalid email or password.' :
         e.code === 'auth/user-not-found' ? 'No account found with this email.' :
         e.code === 'auth/wrong-password' ? 'Incorrect password.' :
         e.code === 'auth/email-already-in-use' ? 'Email already in use.' :
         e.code === 'auth/weak-password' ? 'Password must be at least 6 characters.' :
         e.code === 'auth/invalid-email' ? 'Please enter a valid email.' :
-        'Something went wrong. Please try again.';
-      setError(msg);
+        'Something went wrong. Please try again.'
+      );
     } finally { setLoading(false); }
   }
 
-  function switchMode() {
-    setMode(m => m === 'signin' ? 'signup' : 'signin');
-    setError('');
-    setEmail(''); setPassword(''); setName('');
+  async function handleForgot(e) {
+    e.preventDefault();
+    setError(''); setSuccess(''); setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccess('✓ Reset email sent! Check your inbox and spam folder.');
+    } catch (e) {
+      setError(
+        e.code === 'auth/user-not-found' ? 'No account found with this email.' :
+        e.code === 'auth/invalid-email' ? 'Please enter a valid email.' :
+        'Something went wrong. Please try again.'
+      );
+    } finally { setLoading(false); }
   }
 
+  // ── FORGOT PASSWORD ────────────────────────────────────────────
+  if (mode === 'forgot') {
+    return (
+      <div className="auth-screen">
+        <div className="auth-card scale-in">
+          <div className="auth-title">Reset your password</div>
+          <div className="auth-sub">
+            We'll send a reset link to your email address.
+          </div>
+          <form onSubmit={handleForgot}>
+            <input
+              className="auth-input"
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+            {error && <div className="auth-error">{error}</div>}
+            {success
+              ? <div style={{ fontSize: 13, color: 'var(--success)', lineHeight: 1.6, marginBottom: 14 }}>{success}</div>
+              : <button className="btn btn-primary" type="submit" disabled={loading}>
+                  {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+            }
+          </form>
+          <div className="auth-toggle" style={{ marginTop: 16 }}>
+            <button type="button" onClick={() => reset('signin')}>← Back to Sign In</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── SIGN IN / SIGN UP ──────────────────────────────────────────
   return (
     <div className="auth-screen">
       <div className="auth-card scale-in">
-        <div className="auth-title">
-          {mode === 'signin' ? 'Welcome back' : 'Get started'}
-        </div>
+        <div className="auth-title">{mode === 'signin' ? 'Welcome back' : 'Get started'}</div>
         <div className="auth-sub">
           {mode === 'signin'
             ? 'Sign in to access your work across devices.'
@@ -102,6 +153,23 @@ export default function AuthScreen({ onGuest }) {
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
           />
           {error && <div className="auth-error">{error}</div>}
+
+          {mode === 'signin' && (
+            <div style={{ textAlign: 'right', marginBottom: 12, marginTop: 2 }}>
+              <button
+                type="button"
+                onClick={() => reset('forgot')}
+                style={{
+                  background: 'none', border: 'none',
+                  color: 'var(--accent)', fontSize: 12,
+                  padding: 0, cursor: 'pointer', textDecoration: 'underline'
+                }}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? '...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
@@ -116,7 +184,7 @@ export default function AuthScreen({ onGuest }) {
 
         <div className="auth-toggle">
           {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-          <button type="button" onClick={switchMode}>
+          <button type="button" onClick={() => reset(mode === 'signin' ? 'signup' : 'signin')}>
             {mode === 'signin' ? 'Sign up' : 'Sign in'}
           </button>
         </div>
