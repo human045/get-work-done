@@ -88,6 +88,7 @@ export default function App() {
         showBack={page !== 'dashboard'}
         onBack={goBack}
         onSignOut={handleSignOut}
+        onOpenProfile={() => setPage('profile')}
       />
 
       {!loggedIn ? (

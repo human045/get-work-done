@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, Github, Palette, LogOut, ArrowLeft } from 'lucide-react';
+import { Sun, Moon, Github, Palette, LogOut, ArrowLeft, User } from 'lucide-react';
 import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
-export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut }) {
+export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const themeRef = useRef(null);
@@ -39,10 +39,15 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
     onSignOut();
   }
 
+  function handleProfileClick() {
+    setUserOpen(false);
+    onOpenProfile && onOpenProfile();
+  }
+
   return (
     <div className="topbar">
       {showBack && (
-        <button className="btn-icon" onClick={onBack} title="Back to dashboard" style={{ marginRight: 4 }}>
+        <button className="btn-icon" onClick={onBack} title="Back" style={{ marginRight: 4 }}>
           <ArrowLeft size={17} />
         </button>
       )}
@@ -63,6 +68,7 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
       <div className="topbar-spacer" />
 
       <div className="topbar-actions">
+        {/* Theme picker */}
         <div className="theme-picker" ref={themeRef}>
           <button className="btn-icon" onClick={() => setThemeOpen(o => !o)} title="Change theme">
             <Palette size={16} />
@@ -84,6 +90,7 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
           )}
         </div>
 
+        {/* User avatar → dropdown with Profile + Sign out */}
         <div className="user-menu" ref={userRef}>
           <button className="user-avatar" onClick={() => setUserOpen(o => !o)}>{initials}</button>
           {userOpen && (
@@ -93,9 +100,12 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
                   {user?.displayName || (isGuest ? 'Guest' : user?.email?.split('@')[0] || 'User')}
                 </div>
                 <div className="user-email">
-                  {user?.email || (isGuest ? 'Data saved locally on this device' : '')}
+                  {user?.email || (isGuest ? 'Data saved locally' : '')}
                 </div>
               </div>
+              <button className="dropdown-item" onClick={handleProfileClick}>
+                <User size={13} /> View Profile
+              </button>
               <button className="dropdown-item danger" onClick={handleSignOut}>
                 <LogOut size={13} />
                 {isGuest ? 'Exit guest mode' : 'Sign out'}

@@ -60,14 +60,9 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork, onOpenProf
               : `${works.length} item${works.length !== 1 ? 's' : ''}, sorted by priority`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-outline" style={{ width: 'auto' }} onClick={onOpenProfile}>
-            Profile
-          </button>
-          <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>
-            <Plus size={15} /> Add Work
-          </button>
-        </div>
+        <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>
+          <Plus size={15} /> Add Work
+        </button>
       </div>
 
       <div className="works-grid">
