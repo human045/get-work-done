@@ -58,6 +58,14 @@ function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, on
       style={{
         position: 'relative',
         flexShrink: 0,
+        // Full bar height hit area — this is what makes pointer detection accurate
+        alignSelf: 'stretch',
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      {/* Visual tab */}
+      <div style={{
         borderRadius: 'var(--md-shape-full)',
         border: `2px solid ${borderColor}`,
         transform: tabScale,
@@ -66,70 +74,70 @@ function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, on
                      border-color 200ms ${EASING.standard},
                      background 200ms ${EASING.standard}`,
         willChange: 'transform',
-      }}
-    >
-      <button
-        onClick={onClick}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: isDragging ? '7px 16px' : '5px 12px',
-          borderRadius: 'var(--md-shape-full)',
-          fontSize, fontWeight: isActive || isDropTarget ? 600 : 400,
-          fontFamily: 'var(--md-font)', cursor: 'pointer', border: 'none',
-          background: tabBg,
-          color: textColor,
-          transition: `padding 300ms ${EASING.emphasizedDecel},
-                       font-size 300ms ${EASING.emphasizedDecel},
-                       font-weight 150ms ${EASING.standard},
-                       background 200ms ${EASING.standard},
-                       color 200ms ${EASING.standard}`,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {ws.isDefault && <FolderOpen size={isDragging ? 15 : 13} style={{ transition: `all 300ms ${EASING.emphasizedDecel}` }} />}
-        {ws.name}
-        {isActive && !ws.isDefault && (
-          <span style={{ display: 'flex', gap: 1, marginLeft: 2 }}>
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              onClick={e => { e.stopPropagation(); onStartEdit(); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--md-outline)', padding: 1, display: 'flex' }}
-            >
-              <Pencil size={10} />
-            </button>
-            <button
-              onPointerDown={e => e.stopPropagation()}
-              onClick={e => { e.stopPropagation(); onDelete(); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--md-error)', padding: 1, display: 'flex' }}
-            >
-              <Trash2 size={10} />
-            </button>
-          </span>
+      }}>
+        <button
+          onClick={onClick}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: isDragging ? '7px 16px' : '5px 12px',
+            borderRadius: 'var(--md-shape-full)',
+            fontSize, fontWeight: isActive || isDropTarget ? 600 : 400,
+            fontFamily: 'var(--md-font)', cursor: 'pointer', border: 'none',
+            background: tabBg,
+            color: textColor,
+            transition: `padding 300ms ${EASING.emphasizedDecel},
+                         font-size 300ms ${EASING.emphasizedDecel},
+                         font-weight 150ms ${EASING.standard},
+                         background 200ms ${EASING.standard},
+                         color 200ms ${EASING.standard}`,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {ws.isDefault && <FolderOpen size={isDragging ? 15 : 13} style={{ transition: `all 300ms ${EASING.emphasizedDecel}` }} />}
+          {ws.name}
+          {isActive && !ws.isDefault && (
+            <span style={{ display: 'flex', gap: 1, marginLeft: 2 }}>
+              <button
+                onPointerDown={e => e.stopPropagation()}
+                onClick={e => { e.stopPropagation(); onStartEdit(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--md-outline)', padding: 1, display: 'flex' }}
+              >
+                <Pencil size={10} />
+              </button>
+              <button
+                onPointerDown={e => e.stopPropagation()}
+                onClick={e => { e.stopPropagation(); onDelete(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--md-error)', padding: 1, display: 'flex' }}
+              >
+                <Trash2 size={10} />
+              </button>
+            </span>
+          )}
+        </button>
+
+        {/* Ripple ring when hovering during drag */}
+        {isDropTarget && (
+          <div style={{
+            position: 'absolute', inset: -5,
+            borderRadius: 'var(--md-shape-full)',
+            border: '2px solid var(--md-primary)',
+            opacity: 0.6,
+            animation: 'ws-ring-pulse 1s cubic-bezier(0.2,0,0,1) infinite',
+            pointerEvents: 'none',
+          }} />
         )}
-      </button>
 
-      {/* Ripple ring when hovering during drag */}
-      {isDropTarget && (
-        <div style={{
-          position: 'absolute', inset: -5,
-          borderRadius: 'var(--md-shape-full)',
-          border: '2px solid var(--md-primary)',
-          opacity: 0.6,
-          animation: 'ws-ring-pulse 1s cubic-bezier(0.2,0,0,1) infinite',
-          pointerEvents: 'none',
-        }} />
-      )}
-
-      {/* Success flash overlay */}
-      {isSuccess && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          borderRadius: 'var(--md-shape-full)',
-          background: 'color-mix(in srgb, var(--md-success) 30%, transparent)',
-          animation: 'ws-success-flash 0.6s cubic-bezier(0.2,0,0,1) forwards',
-          pointerEvents: 'none',
-        }} />
-      )}
+        {/* Success flash overlay */}
+        {isSuccess && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            borderRadius: 'var(--md-shape-full)',
+            background: 'color-mix(in srgb, var(--md-success) 30%, transparent)',
+            animation: 'ws-success-flash 0.6s cubic-bezier(0.2,0,0,1) forwards',
+            pointerEvents: 'none',
+          }} />
+        )}
+      </div>
     </div>
   );
 }
@@ -206,7 +214,7 @@ export default function WorkspaceBar({
         background: isDragging
           ? 'color-mix(in srgb, var(--md-primary) 6%, var(--md-surface-1))'
           : 'var(--md-surface-1)',
-        overflowX: 'auto',
+        overflowX: isDragging ? 'visible' : 'auto',
         flexShrink: 0,
         transition: `height 350ms ${EASING.emphasizedDecel},
                      min-height 350ms ${EASING.emphasizedDecel},

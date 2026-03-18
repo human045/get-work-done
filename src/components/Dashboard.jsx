@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, ChevronRight, CheckCircle2 } from 'lucide-react';
 import {
   DndContext, DragOverlay, PointerSensor, TouchSensor,
-  useSensor, useSensors, useDraggable,
+  useSensor, useSensors, useDraggable, pointerWithin,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import StarRating from './StarRating';
@@ -221,7 +221,7 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
         }
       `}</style>
 
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           <WorkspaceBar
