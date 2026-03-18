@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, Github, Palette, LogOut, ArrowLeft, User } from 'lucide-react';
+import { Sun, Moon, Github, Palette, LogOut, ArrowLeft, User, Trophy } from 'lucide-react';
 import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
-export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile }) {
+export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, myPoints }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const themeRef = useRef(null);
@@ -33,15 +33,8 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
 
   async function handleSignOut() {
     setUserOpen(false);
-    if (!isGuest) {
-      try { await signOut(auth); } catch (e) { console.error(e); }
-    }
+    if (!isGuest) { try { await signOut(auth); } catch (e) {} }
     onSignOut();
-  }
-
-  function handleProfileClick() {
-    setUserOpen(false);
-    onOpenProfile && onOpenProfile();
   }
 
   return (
@@ -68,6 +61,35 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
       <div className="topbar-spacer" />
 
       <div className="topbar-actions">
+
+        {/* Points pill */}
+        {myPoints !== null && !isGuest && (
+          <button
+            onClick={onOpenLeaderboard}
+            title="View leaderboard"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 20, padding: '4px 10px',
+              fontSize: 12, fontWeight: 700, fontFamily: 'var(--mono)',
+              color: 'var(--star-active)', cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--star-active)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+          >
+            <Trophy size={11} />
+            {myPoints?.totalPoints ?? 0}
+          </button>
+        )}
+
+        {/* Leaderboard icon for guests */}
+        {isGuest && (
+          <button className="btn-icon" onClick={onOpenLeaderboard} title="Leaderboard">
+            <Trophy size={16} />
+          </button>
+        )}
+
         {/* Theme picker */}
         <div className="theme-picker" ref={themeRef}>
           <button className="btn-icon" onClick={() => setThemeOpen(o => !o)} title="Change theme">
@@ -90,7 +112,7 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
           )}
         </div>
 
-        {/* User avatar → dropdown with Profile + Sign out */}
+        {/* User avatar */}
         <div className="user-menu" ref={userRef}>
           <button className="user-avatar" onClick={() => setUserOpen(o => !o)}>{initials}</button>
           {userOpen && (
@@ -102,9 +124,19 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
                 <div className="user-email">
                   {user?.email || (isGuest ? 'Data saved locally' : '')}
                 </div>
+                {myPoints && (
+                  <div style={{ fontSize: 11, color: 'var(--star-active)', marginTop: 4, fontWeight: 600 }}>
+                    🏆 {myPoints.totalPoints} points
+                  </div>
+                )}
               </div>
-              <button className="dropdown-item" onClick={handleProfileClick}>
-                <User size={13} /> View Profile
+              {!isGuest && (
+                <button className="dropdown-item" onClick={() => { setUserOpen(false); onOpenProfile(); }}>
+                  <User size={13} /> View Profile
+                </button>
+              )}
+              <button className="dropdown-item" onClick={() => { setUserOpen(false); onOpenLeaderboard(); }}>
+                <Trophy size={13} /> Leaderboard
               </button>
               <button className="dropdown-item danger" onClick={handleSignOut}>
                 <LogOut size={13} />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { auth, onAuthStateChanged } from './firebase';
 import { getWorks } from './storage';
 import { applyTheme } from './themes';
+import { ensureLeaderboardEntry, getMyPoints } from './points';
 import './App.css';
 
 import Topbar from './components/Topbar';
@@ -9,15 +10,23 @@ import AuthScreen from './components/AuthScreen';
 import Dashboard from './components/Dashboard';
 import WorkPage from './components/WorkPage';
 import ProfilePage from './components/ProfilePage';
+import Leaderboard from './components/Leaderboard';
 
 const THEME_KEY = 'gwd_theme';
 const GUEST_KEY = 'gwd_guest';
+
+function getInitials(user) {
+  if (!user) return 'G';
+  if (user.displayName) return user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  return user.email?.[0]?.toUpperCase() || 'U';
+}
 
 export default function App() {
   const [authState, setAuthState] = useState('loading');
   const [user, setUser] = useState(null);
   const [works, setWorks] = useState([]);
-  // page: 'dashboard' | 'work' | 'profile'
+  const [myPoints, setMyPoints] = useState(null);
+  // page: 'dashboard' | 'work' | 'profile' | 'leaderboard'
   const [page, setPage] = useState('dashboard');
   const [openWork, setOpenWork] = useState(null);
   const [theme, setThemeState] = useState(() => localStorage.getItem(THEME_KEY) || 'github-dark');
@@ -29,6 +38,10 @@ export default function App() {
       if (u) {
         setUser(u); setAuthState('authed');
         setWorks(await getWorks(u.uid));
+        // Set up leaderboard entry and load points
+        await ensureLeaderboardEntry(u.uid, u.displayName || u.email?.split('@')[0], getInitials(u));
+        const pts = await getMyPoints(u.uid);
+        setMyPoints(pts);
       } else {
         const isGuest = localStorage.getItem(GUEST_KEY) === '1';
         if (isGuest) {
@@ -41,6 +54,13 @@ export default function App() {
     });
     return unsub;
   }, []);
+
+  // Refresh points when returning to dashboard
+  async function refreshPoints(uid) {
+    if (!uid) return;
+    const pts = await getMyPoints(uid);
+    setMyPoints(pts);
+  }
 
   function handleGuest() {
     localStorage.setItem(GUEST_KEY, '1');
@@ -57,12 +77,15 @@ export default function App() {
   function handleSignOut() {
     localStorage.removeItem(GUEST_KEY);
     setAuthState('unauthed');
-    setUser(null); setWorks([]);
+    setUser(null); setWorks([]); setMyPoints(null);
     setOpenWork(null); setPage('dashboard');
   }
 
   function openWorkPage(work) { setOpenWork(work); setPage('work'); }
-  function goBack() { setPage('dashboard'); setOpenWork(null); }
+  function goBack() {
+    if (page === 'work' && user) refreshPoints(user.uid);
+    setPage('dashboard'); setOpenWork(null);
+  }
 
   if (authState === 'loading') {
     return (
@@ -85,10 +108,12 @@ export default function App() {
         isGuest={authState === 'guest'}
         theme={theme}
         setTheme={setThemeState}
+        myPoints={myPoints}
         showBack={page !== 'dashboard'}
         onBack={goBack}
         onSignOut={handleSignOut}
         onOpenProfile={() => setPage('profile')}
+        onOpenLeaderboard={() => setPage('leaderboard')}
       />
 
       {!loggedIn ? (
@@ -102,12 +127,9 @@ export default function App() {
           onWorkUpdate={handleWorkUpdate}
         />
       ) : page === 'profile' ? (
-        <ProfilePage
-          user={user}
-          isGuest={authState === 'guest'}
-          uid={uid}
-          onBack={goBack}
-        />
+        <ProfilePage user={user} isGuest={authState === 'guest'} uid={uid} myPoints={myPoints} />
+      ) : page === 'leaderboard' ? (
+        <Leaderboard uid={uid} myPoints={myPoints} />
       ) : (
         <Dashboard
           works={works}

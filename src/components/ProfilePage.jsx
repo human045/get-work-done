@@ -30,7 +30,7 @@ function StatCard({ value, label, color }) {
   );
 }
 
-export default function ProfilePage({ user, isGuest, uid }) {
+export default function ProfilePage({ user, isGuest, uid, myPoints }) {
   const [deleted, setDeleted] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purgeTarget, setPurgeTarget] = useState(null);
@@ -112,9 +112,9 @@ export default function ProfilePage({ user, isGuest, uid }) {
 
         {/* ── Stats ─────────────────────────────────────── */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 28 }} className="fade-in">
-          <StatCard value={deleted.length} label="Total" />
-          <StatCard value={finished.length} label="Finished" color="var(--success)" />
-          <StatCard value={removed.length} label="Deleted" color="var(--danger)" />
+          <StatCard value={myPoints?.totalPoints ?? 0} label="Points" color="var(--star-active)" />
+          <StatCard value={myPoints?.tasksCompleted ?? 0} label="Tasks Done" color="var(--success)" />
+          <StatCard value={myPoints?.worksFinished ?? 0} label="Finished" color="var(--accent)" />
         </div>
 
         {/* ── History Section ───────────────────────────── */}

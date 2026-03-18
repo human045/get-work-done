@@ -4,6 +4,7 @@ import StarRating from './StarRating';
 import AddWorkModal from './AddWorkModal';
 import ConfirmModal from './ConfirmModal';
 import { generateId, saveWork, archiveWork } from '../storage';
+import { awardFinishPoints } from '../points';
 
 export default function Dashboard({ works, setWorks, uid, onOpenWork, onOpenProfile }) {
   const [showModal, setShowModal] = useState(false);
@@ -43,6 +44,7 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork, onOpenProf
     if (!finishTarget) return;
     setWorks(works.filter(w => w.id !== finishTarget.id));
     await archiveWork(uid, { ...finishTarget, finishedAt: Date.now() });
+    if (uid) await awardFinishPoints(uid, finishTarget.stars);
     setFinishTarget(null);
   }
 

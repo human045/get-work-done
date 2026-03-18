@@ -6,7 +6,11 @@ import {
   onAuthStateChanged, updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
+import {
+  getFirestore, doc, setDoc, getDoc, deleteDoc,
+  collection, getDocs, onSnapshot,
+  increment, updateDoc, query, orderBy, limit
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -27,5 +31,7 @@ export {
   signInWithEmailAndPassword, signOut,
   onAuthStateChanged, updateProfile,
   sendPasswordResetEmail,
-  doc, setDoc, deleteDoc, collection, getDocs
+  doc, setDoc, getDoc, deleteDoc,
+  collection, getDocs, onSnapshot,
+  increment, updateDoc, query, orderBy, limit
 };
