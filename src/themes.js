@@ -1,69 +1,54 @@
 export const themes = {
+  'purple-night': {
+    name: 'Purple Night',
+    dark: true,
+    primary: '#d0bcff',
+    surface: '#1c1b1f',
+  },
+  'ocean-blue': {
+    name: 'Ocean Blue',
+    dark: true,
+    primary: '#9ecaff',
+    surface: '#1a1c1e',
+  },
+  'forest-green': {
+    name: 'Forest Green',
+    dark: true,
+    primary: '#80db80',
+    surface: '#191c19',
+  },
+  'sunset-red': {
+    name: 'Sunset Red',
+    dark: true,
+    primary: '#ffb680',
+    surface: '#1f1b16',
+  },
   'github-dark': {
     name: 'GitHub Dark',
-    vars: {
-      '--bg': '#0d1117',
-      '--bg2': '#161b22',
-      '--bg3': '#21262d',
-      '--border': '#30363d',
-      '--text': '#e6edf3',
-      '--text2': '#8b949e',
-      '--text3': '#6e7681',
-      '--accent': '#58a6ff',
-      '--accent2': '#1f6feb',
-      '--star-active': '#f0883e',
-      '--star-inactive': '#30363d',
-      '--danger': '#f85149',
-      '--success': '#3fb950',
-      '--shadow': '0 4px 24px rgba(0,0,0,0.4)',
-      '--radius': '8px',
-    }
+    dark: true,
+    primary: '#58a6ff',
+    surface: '#0d1117',
   },
-  'dark': {
-    name: 'Dark',
-    vars: {
-      '--bg': '#1a1a2e',
-      '--bg2': '#16213e',
-      '--bg3': '#0f3460',
-      '--border': '#2d3561',
-      '--text': '#eaeaea',
-      '--text2': '#a8a8b3',
-      '--text3': '#6c6c80',
-      '--accent': '#7c85ff',
-      '--accent2': '#4d5aff',
-      '--star-active': '#ffbb38',
-      '--star-inactive': '#2d3561',
-      '--danger': '#ff6b6b',
-      '--success': '#51cf66',
-      '--shadow': '0 4px 24px rgba(0,0,0,0.45)',
-      '--radius': '10px',
-    }
+  'daylight': {
+    name: 'Daylight',
+    dark: false,
+    primary: '#6750a4',
+    surface: '#fffbfe',
   },
-  'light': {
-    name: 'Light',
-    vars: {
-      '--bg': '#f5f5f0',
-      '--bg2': '#ffffff',
-      '--bg3': '#efefea',
-      '--border': '#ddddd5',
-      '--text': '#1a1a1a',
-      '--text2': '#555555',
-      '--text3': '#999999',
-      '--accent': '#2563eb',
-      '--accent2': '#1d4ed8',
-      '--star-active': '#f59e0b',
-      '--star-inactive': '#ddddd5',
-      '--danger': '#dc2626',
-      '--success': '#16a34a',
-      '--shadow': '0 4px 24px rgba(0,0,0,0.08)',
-      '--radius': '10px',
-    }
-  }
+  'mint-fresh': {
+    name: 'Mint Fresh',
+    dark: false,
+    primary: '#1b6e35',
+    surface: '#f4fbf4',
+  },
 };
 
 export function applyTheme(themeName) {
   const theme = themes[themeName];
   if (!theme) return;
-  const root = document.documentElement;
-  Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v));
+  // Set data-theme on html element — CSS handles the rest
+  document.documentElement.setAttribute('data-theme', themeName);
+  // Sync meta theme-color for mobile browsers
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme.surface);
 }
