@@ -1,12 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
-import { Check, Plus, Trash2, Eye, Pencil } from 'lucide-react';
-import { marked } from 'marked';
+import { Check, Plus, Trash2 } from 'lucide-react';
 import StarRating from './StarRating';
 import { saveWork, generateId } from '../storage';
 import { awardTaskPoints } from '../points';
-
-// Configure marked for safe, clean output
-marked.setOptions({ breaks: true, gfm: true });
 
 const MAX_TODOS = 3;
 
@@ -40,7 +36,6 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
   const [todoInput, setTodoInput] = useState('');
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState({ visible: false, pts: 0 });
-  const [noteMode, setNoteMode] = useState('edit'); // 'edit' | 'preview'
   const saveTimer = useRef(null);
   const toastTimer = useRef(null);
 
@@ -91,9 +86,6 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
 
   function clearHistory() { persist({ ...work, history: [] }); }
   function handleStars(stars) { persist({ ...work, stars }); }
-
-  // Markdown preview HTML
-  const previewHtml = marked.parse(work.note || '*No notes yet. Switch to edit mode to write.*');
 
   return (
     <div className="work-page fade-in">
@@ -188,57 +180,18 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
         <div className="notepad-panel">
           <div className="notepad-header">
             <span>Notes</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {saved && (
-                <span className="notepad-saved">
-                  <Check size={11} /> Saved
-                </span>
-              )}
-              {/* Edit / Preview toggle */}
-              <div style={{
-                display: 'flex', gap: 2,
-                background: 'var(--md-surface-2)',
-                border: '1px solid var(--md-outline-var)',
-                borderRadius: 'var(--md-shape-full)',
-                padding: 2,
-              }}>
-                {[
-                  { mode: 'edit', icon: <Pencil size={12} />, label: 'Edit' },
-                  { mode: 'preview', icon: <Eye size={12} />, label: 'Preview' },
-                ].map(btn => (
-                  <button
-                    key={btn.mode}
-                    onClick={() => setNoteMode(btn.mode)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 5,
-                      padding: '4px 10px', borderRadius: 'var(--md-shape-full)',
-                      fontSize: 11, fontWeight: 500, border: 'none',
-                      fontFamily: 'var(--md-font)', cursor: 'pointer',
-                      background: noteMode === btn.mode ? 'var(--md-primary)' : 'transparent',
-                      color: noteMode === btn.mode ? 'var(--md-on-primary)' : 'var(--md-outline)',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {btn.icon} {btn.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {saved && (
+              <span className="notepad-saved">
+                <Check size={11} /> Saved
+              </span>
+            )}
           </div>
-
-          {noteMode === 'edit' ? (
-            <textarea
-              className="notepad-textarea"
-              placeholder={`Write notes in **Markdown**...\n\n# Heading\n**bold**, *italic*, \`code\`\n- list item\n> blockquote`}
-              value={work.note || ''}
-              onChange={handleNote}
-            />
-          ) : (
-            <div
-              className="md-preview"
-              dangerouslySetInnerHTML={{ __html: previewHtml }}
-            />
-          )}
+          <textarea
+            className="notepad-textarea"
+            placeholder="Write anything about this work — ideas, context, progress, blockers..."
+            value={work.note || ''}
+            onChange={handleNote}
+          />
         </div>
       </div>
 

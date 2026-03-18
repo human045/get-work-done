@@ -989,57 +989,6 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   border-radius: var(--md-shape-full);
 }
 
-/* ── MARKDOWN PREVIEW ────────────────────────────────────────── */
-.md-preview {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 24px;
-  color: var(--md-on-surface);
-  font-size: 15px;
-  line-height: 1.75;
-  font-family: var(--md-font);
-}
-.md-preview h1 { font-size: 22px; font-weight: 500; margin: 0 0 12px; color: var(--md-on-surface); border-bottom: 1px solid var(--md-outline-var); padding-bottom: 8px; }
-.md-preview h2 { font-size: 18px; font-weight: 500; margin: 20px 0 8px; color: var(--md-on-surface); }
-.md-preview h3 { font-size: 15px; font-weight: 600; margin: 16px 0 6px; color: var(--md-on-surface-var); }
-.md-preview p  { margin: 0 0 12px; }
-.md-preview strong { font-weight: 600; color: var(--md-on-surface); }
-.md-preview em { font-style: italic; color: var(--md-on-surface-var); }
-.md-preview code {
-  font-family: var(--md-mono);
-  font-size: 13px;
-  background: var(--md-surface-3);
-  color: var(--md-tertiary);
-  padding: 2px 6px;
-  border-radius: var(--md-shape-xs);
-}
-.md-preview pre {
-  background: var(--md-surface-2);
-  border: 1px solid var(--md-outline-var);
-  border-radius: var(--md-shape-md);
-  padding: 14px 16px;
-  overflow-x: auto;
-  margin: 0 0 14px;
-}
-.md-preview pre code {
-  background: none; padding: 0; color: var(--md-on-surface);
-  font-size: 13px; line-height: 1.6;
-}
-.md-preview ul, .md-preview ol { padding-left: 20px; margin: 0 0 12px; }
-.md-preview li { margin-bottom: 4px; }
-.md-preview blockquote {
-  border-left: 3px solid var(--md-primary);
-  margin: 0 0 12px;
-  padding: 4px 0 4px 14px;
-  color: var(--md-on-surface-var);
-  font-style: italic;
-}
-.md-preview a { color: var(--md-primary); text-decoration: underline; }
-.md-preview hr { border: none; border-top: 1px solid var(--md-outline-var); margin: 16px 0; }
-.md-preview table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 14px; }
-.md-preview th { background: var(--md-surface-2); padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--md-outline-var); }
-.md-preview td { padding: 8px 12px; border-bottom: 1px solid var(--md-outline-var); }
-
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .tasks-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--md-outline-var); }
