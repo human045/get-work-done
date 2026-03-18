@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Zap, CheckCircle2 } from 'lucide-react';
 import { getLeaderboard } from '../points';
+import PublicProfileModal from './PublicProfileModal';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -11,8 +12,7 @@ function RankBadge({ rank }) {
       width: 28, height: 28, borderRadius: '50%',
       background: 'var(--bg3)', border: '1px solid var(--border)',
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 12, fontWeight: 700, color: 'var(--text3)',
-      fontFamily: 'var(--mono)',
+      fontSize: 12, fontWeight: 700, color: 'var(--text3)', fontFamily: 'var(--mono)',
     }}>
       {rank + 1}
     </span>
@@ -22,6 +22,7 @@ function RankBadge({ rank }) {
 export default function Leaderboard({ uid, myPoints }) {
   const [board, setBoard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewProfile, setViewProfile] = useState(null); // uid of profile to view
 
   useEffect(() => {
     async function load() {
@@ -48,7 +49,7 @@ export default function Leaderboard({ uid, myPoints }) {
           <div style={{ fontSize: 32, marginBottom: 8 }}>🏆</div>
           <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.4px' }}>Leaderboard</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>
-            Top users ranked by total points earned
+            Top users ranked by total points · click any player to view their profile
           </div>
         </div>
 
@@ -74,13 +75,17 @@ export default function Leaderboard({ uid, myPoints }) {
 
         {/* My rank callout */}
         {uid && myPoints && myRank >= 0 && (
-          <div style={{
-            background: 'linear-gradient(135deg, var(--accent2)22, var(--accent)11)',
-            border: '1px solid var(--accent)',
-            borderRadius: 10, padding: '12px 16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: 16,
-          }} className="fade-in">
+          <div
+            style={{
+              background: 'linear-gradient(135deg, var(--accent2)22, var(--accent)11)',
+              border: '1px solid var(--accent)',
+              borderRadius: 10, padding: '12px 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 16, cursor: 'pointer',
+            }}
+            onClick={() => setViewProfile(uid)}
+            className="fade-in"
+          >
             <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
               Your rank: #{myRank + 1}
             </div>
@@ -112,27 +117,32 @@ export default function Leaderboard({ uid, myPoints }) {
             <div
               key={entry.uid}
               className="fade-in"
+              onClick={() => setViewProfile(entry.uid)}
               style={{
                 background: isMe ? 'linear-gradient(135deg, var(--accent2)18, var(--bg2))' : 'var(--bg2)',
                 border: `1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 10,
-                padding: '13px 16px',
+                borderRadius: 10, padding: '13px 16px',
                 marginBottom: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
+                display: 'flex', alignItems: 'center', gap: 12,
                 animationDelay: `${i * 0.03}s`,
-                transition: 'border-color 0.15s',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { if (!isMe) e.currentTarget.style.borderColor = 'var(--text3)'; }}
-              onMouseLeave={e => { if (!isMe) e.currentTarget.style.borderColor = 'var(--border)'; }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = 'var(--shadow)';
+                if (!isMe) e.currentTarget.style.borderColor = 'var(--text3)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                if (!isMe) e.currentTarget.style.borderColor = 'var(--border)';
+              }}
             >
-              {/* Rank */}
               <div style={{ width: 32, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
                 <RankBadge rank={i} />
               </div>
 
-              {/* Avatar */}
               <div style={{
                 width: 36, height: 36, borderRadius: '50%',
                 background: isMe ? 'var(--accent2)' : 'var(--bg3)',
@@ -145,7 +155,6 @@ export default function Leaderboard({ uid, myPoints }) {
                 {entry.initials || entry.displayName?.[0]?.toUpperCase() || '?'}
               </div>
 
-              {/* Name + stats */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: 13, fontWeight: 600,
@@ -156,23 +165,27 @@ export default function Leaderboard({ uid, myPoints }) {
                   {isMe && (
                     <span style={{
                       fontSize: 9, background: 'var(--accent)', color: '#fff',
-                      borderRadius: 3, padding: '1px 5px', letterSpacing: '0.05em',
-                      fontWeight: 600,
+                      borderRadius: 3, padding: '1px 5px',
+                      fontWeight: 600, letterSpacing: '0.05em',
                     }}>YOU</span>
                   )}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, display: 'flex', gap: 10 }}>
-                  <span>{entry.tasksCompleted || 0} tasks</span>
-                  <span>{entry.worksFinished || 0} finished</span>
-                </div>
+                {entry.status ? (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1, fontStyle: 'italic',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    "{entry.status}"
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>
+                    {entry.tasksCompleted || 0} tasks · {entry.worksFinished || 0} finished
+                  </div>
+                )}
               </div>
 
-              {/* Points */}
               <div style={{
                 fontSize: 15, fontWeight: 700,
                 color: i === 0 ? '#f0883e' : i === 1 ? '#8b949e' : i === 2 ? '#b08a60' : 'var(--text)',
-                fontFamily: 'var(--mono)',
-                flexShrink: 0,
+                fontFamily: 'var(--mono)', flexShrink: 0,
               }}>
                 {entry.totalPoints || 0}
                 <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--text3)', marginLeft: 3 }}>pts</span>
@@ -181,6 +194,14 @@ export default function Leaderboard({ uid, myPoints }) {
           );
         })}
       </div>
+
+      {viewProfile && (
+        <PublicProfileModal
+          targetUid={viewProfile}
+          myUid={uid}
+          onClose={() => setViewProfile(null)}
+        />
+      )}
     </div>
   );
 }
