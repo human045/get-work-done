@@ -111,6 +111,7 @@ export default function App() {
         myPoints={myPoints}
         showBack={page !== 'dashboard'}
         onBack={goBack}
+        onHome={goBack}
         onSignOut={handleSignOut}
         onOpenProfile={() => setPage('profile')}
         onOpenLeaderboard={() => setPage('leaderboard')}

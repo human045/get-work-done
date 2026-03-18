@@ -3,12 +3,14 @@ import { db, doc, setDoc, deleteDoc, collection, getDocs } from './firebase';
 const LOCAL_KEY = 'gwd_data';
 
 function localGet() {
-  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || { works: [], deletedWorks: [] }; }
-  catch { return { works: [], deletedWorks: [] }; }
+  try {
+    const d = JSON.parse(localStorage.getItem(LOCAL_KEY));
+    return d || { works: [], deletedWorks: [], workspaces: [] };
+  } catch { return { works: [], deletedWorks: [], workspaces: [] }; }
 }
 function localSet(data) { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); }
 
-// ─── CLOUD ───────────────────────────────────────────────────────────────────
+// ─── CLOUD WORKS ──────────────────────────────────────────────────
 async function cloudGetWorks(uid) {
   const snap = await getDocs(collection(db, 'users', uid, 'works'));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -21,11 +23,7 @@ async function cloudSaveWork(uid, work) {
   await setDoc(doc(db, 'users', uid, 'works', work.id), work);
 }
 async function cloudArchiveWork(uid, work) {
-  // Save to deletedWorks collection, remove from works
-  await setDoc(doc(db, 'users', uid, 'deletedWorks', work.id), {
-    ...work,
-    deletedAt: Date.now()
-  });
+  await setDoc(doc(db, 'users', uid, 'deletedWorks', work.id), { ...work, deletedAt: Date.now() });
   await deleteDoc(doc(db, 'users', uid, 'works', work.id));
 }
 async function cloudDeleteWork(uid, workId) {
@@ -35,7 +33,19 @@ async function cloudPermanentDelete(uid, workId) {
   await deleteDoc(doc(db, 'users', uid, 'deletedWorks', workId));
 }
 
-// ─── UNIFIED API ─────────────────────────────────────────────────────────────
+// ─── CLOUD WORKSPACES ─────────────────────────────────────────────
+async function cloudGetWorkspaces(uid) {
+  const snap = await getDocs(collection(db, 'users', uid, 'workspaces'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function cloudSaveWorkspace(uid, ws) {
+  await setDoc(doc(db, 'users', uid, 'workspaces', ws.id), ws);
+}
+async function cloudDeleteWorkspace(uid, wsId) {
+  await deleteDoc(doc(db, 'users', uid, 'workspaces', wsId));
+}
+
+// ─── UNIFIED API ──────────────────────────────────────────────────
 export async function getWorks(uid) {
   if (!uid) return localGet().works;
   return await cloudGetWorks(uid);
@@ -57,7 +67,6 @@ export async function saveWork(uid, work) {
   }
 }
 
-// Move work to deleted archive (finish or delete)
 export async function archiveWork(uid, work) {
   const archived = { ...work, deletedAt: Date.now() };
   if (!uid) {
@@ -70,7 +79,6 @@ export async function archiveWork(uid, work) {
   }
 }
 
-// Hard delete (no archive)
 export async function deleteWork(uid, workId) {
   if (!uid) {
     const data = localGet();
@@ -81,7 +89,6 @@ export async function deleteWork(uid, workId) {
   }
 }
 
-// Permanently remove from deleted history
 export async function permanentDelete(uid, workId) {
   if (!uid) {
     const data = localGet();
@@ -89,6 +96,33 @@ export async function permanentDelete(uid, workId) {
     localSet(data);
   } else {
     await cloudPermanentDelete(uid, workId);
+  }
+}
+
+// ─── WORKSPACES ───────────────────────────────────────────────────
+export async function getWorkspaces(uid) {
+  if (!uid) return localGet().workspaces || [];
+  return await cloudGetWorkspaces(uid);
+}
+
+export async function saveWorkspace(uid, ws) {
+  if (!uid) {
+    const data = localGet();
+    const idx = data.workspaces.findIndex(w => w.id === ws.id);
+    if (idx >= 0) data.workspaces[idx] = ws; else data.workspaces.push(ws);
+    localSet(data);
+  } else {
+    await cloudSaveWorkspace(uid, ws);
+  }
+}
+
+export async function deleteWorkspace(uid, wsId) {
+  if (!uid) {
+    const data = localGet();
+    data.workspaces = data.workspaces.filter(w => w.id !== wsId);
+    localSet(data);
+  } else {
+    await cloudDeleteWorkspace(uid, wsId);
   }
 }
 

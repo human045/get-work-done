@@ -1,8 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2, Eye, Pencil } from 'lucide-react';
+import { marked } from 'marked';
 import StarRating from './StarRating';
 import { saveWork, generateId } from '../storage';
 import { awardTaskPoints } from '../points';
+
+// Configure marked for safe, clean output
+marked.setOptions({ breaks: true, gfm: true });
 
 const MAX_TODOS = 3;
 
@@ -12,28 +16,21 @@ function formatTime(ts) {
     d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Floating +pts toast
 function PointsToast({ pts, visible }) {
   return (
     <span style={{
-      position: 'fixed',
-      bottom: 80,
-      right: 28,
-      background: 'var(--success)',
-      color: '#fff',
-      fontWeight: 700,
-      fontSize: 14,
-      padding: '6px 14px',
-      borderRadius: 20,
-      boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+      position: 'fixed', bottom: 80, right: 28,
+      background: 'var(--md-primary)', color: 'var(--md-on-primary)',
+      fontWeight: 700, fontSize: 14, padding: '8px 16px',
+      borderRadius: 'var(--md-shape-full)',
+      boxShadow: 'var(--md-elev-3)',
       opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
-      transition: 'all 0.25s ease',
-      pointerEvents: 'none',
-      zIndex: 999,
-      fontFamily: 'var(--mono)',
+      transform: visible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.9)',
+      transition: 'all 0.28s cubic-bezier(0.2,0,0,1)',
+      pointerEvents: 'none', zIndex: 999,
+      fontFamily: 'var(--md-mono)',
     }}>
-      +{pts} pts
+      +{pts} pts ✓
     </span>
   );
 }
@@ -43,6 +40,7 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
   const [todoInput, setTodoInput] = useState('');
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState({ visible: false, pts: 0 });
+  const [noteMode, setNoteMode] = useState('edit'); // 'edit' | 'preview'
   const saveTimer = useRef(null);
   const toastTimer = useRef(null);
 
@@ -52,7 +50,7 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
   function showToast(pts) {
     setToast({ visible: true, pts });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast({ visible: false, pts }), 1800);
+    toastTimer.current = setTimeout(() => setToast(t => ({ ...t, visible: false })), 1800);
   }
 
   const persist = useCallback(async (updated) => {
@@ -84,24 +82,18 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
     const newTodos = activeTodos.filter(t => t.id !== id);
     const newHistory = [{ ...todo, done: true, completedAt: Date.now() }, ...history];
     await persist({ ...work, todos: newTodos, history: newHistory });
-    // Award points
-    if (uid) {
-      await awardTaskPoints(uid);
-      showToast(10);
-    }
+    if (uid) { await awardTaskPoints(uid); showToast(10); }
   }
 
   function deleteTodo(id) {
     persist({ ...work, todos: activeTodos.filter(t => t.id !== id) });
   }
 
-  function clearHistory() {
-    persist({ ...work, history: [] });
-  }
+  function clearHistory() { persist({ ...work, history: [] }); }
+  function handleStars(stars) { persist({ ...work, stars }); }
 
-  function handleStars(stars) {
-    persist({ ...work, stars });
-  }
+  // Markdown preview HTML
+  const previewHtml = marked.parse(work.note || '*No notes yet. Switch to edit mode to write.*');
 
   return (
     <div className="work-page fade-in">
@@ -120,7 +112,7 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
             </div>
 
             {activeTodos.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--md-outline)', marginBottom: 10 }}>
                 No tasks yet. Add up to 3 focused tasks.
               </div>
             )}
@@ -130,12 +122,10 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
                 <button
                   className="todo-check"
                   onClick={() => toggleTodo(todo.id)}
-                  title="Mark complete (+10 pts)"
-                >
-                  <Check size={10} color="transparent" />
-                </button>
+                  title="Complete (+10 pts)"
+                />
                 <span className="todo-text">{todo.text}</span>
-                <button className="btn-icon" style={{ padding: 3 }} onClick={() => deleteTodo(todo.id)}>
+                <button className="btn-icon" style={{ padding: 3, width: 28, height: 28 }} onClick={() => deleteTodo(todo.id)}>
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -153,17 +143,20 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
                 />
                 <button
                   className="btn-icon"
-                  style={{ background: 'var(--accent)', color: '#fff', padding: '7px', borderRadius: 'var(--radius)' }}
+                  style={{
+                    background: 'var(--md-primary)', color: 'var(--md-on-primary)',
+                    width: 36, height: 36, borderRadius: 'var(--md-shape-sm)',
+                  }}
                   onClick={addTodo}
                   disabled={!todoInput.trim()}
                 >
-                  <Plus size={14} />
+                  <Plus size={16} />
                 </button>
               </div>
             )}
 
             {activeTodos.length >= MAX_TODOS && (
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--md-outline)', marginTop: 8 }}>
                 ✓ Max 3 tasks. Complete one to add more.
               </div>
             )}
@@ -171,17 +164,15 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
 
           {/* Completed history */}
           <div style={{ padding: '12px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Completed
-            </span>
+            <span className="panel-section-title" style={{ marginBottom: 0 }}>Completed</span>
             {history.length > 0 && (
-              <button className="btn-danger" style={{ fontSize: 10, padding: '3px 8px' }} onClick={clearHistory}>Clear</button>
+              <button className="btn-danger" style={{ fontSize: 11, padding: '3px 8px' }} onClick={clearHistory}>Clear</button>
             )}
           </div>
 
           <div className="history-section">
             {history.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text3)' }}>Completed tasks will appear here.</div>
+              <div style={{ fontSize: 13, color: 'var(--md-outline)' }}>Completed tasks appear here.</div>
             )}
             {history.map(item => (
               <div key={item.id + item.completedAt} className="history-item">
@@ -197,18 +188,57 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
         <div className="notepad-panel">
           <div className="notepad-header">
             <span>Notes</span>
-            {saved && (
-              <span className="notepad-saved">
-                <Check size={11} /> Saved
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {saved && (
+                <span className="notepad-saved">
+                  <Check size={11} /> Saved
+                </span>
+              )}
+              {/* Edit / Preview toggle */}
+              <div style={{
+                display: 'flex', gap: 2,
+                background: 'var(--md-surface-2)',
+                border: '1px solid var(--md-outline-var)',
+                borderRadius: 'var(--md-shape-full)',
+                padding: 2,
+              }}>
+                {[
+                  { mode: 'edit', icon: <Pencil size={12} />, label: 'Edit' },
+                  { mode: 'preview', icon: <Eye size={12} />, label: 'Preview' },
+                ].map(btn => (
+                  <button
+                    key={btn.mode}
+                    onClick={() => setNoteMode(btn.mode)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '4px 10px', borderRadius: 'var(--md-shape-full)',
+                      fontSize: 11, fontWeight: 500, border: 'none',
+                      fontFamily: 'var(--md-font)', cursor: 'pointer',
+                      background: noteMode === btn.mode ? 'var(--md-primary)' : 'transparent',
+                      color: noteMode === btn.mode ? 'var(--md-on-primary)' : 'var(--md-outline)',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {btn.icon} {btn.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <textarea
-            className="notepad-textarea"
-            placeholder="Write anything about this work — ideas, context, progress, blockers..."
-            value={work.note || ''}
-            onChange={handleNote}
-          />
+
+          {noteMode === 'edit' ? (
+            <textarea
+              className="notepad-textarea"
+              placeholder={`Write notes in **Markdown**...\n\n# Heading\n**bold**, *italic*, \`code\`\n- list item\n> blockquote`}
+              value={work.note || ''}
+              onChange={handleNote}
+            />
+          ) : (
+            <div
+              className="md-preview"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          )}
         </div>
       </div>
 

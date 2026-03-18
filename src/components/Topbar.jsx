@@ -3,7 +3,7 @@ import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun } from 'lucide-reac
 import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
-export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, myPoints }) {
+export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, myPoints, onHome }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const themeRef = useRef(null);
@@ -41,9 +41,15 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
         </button>
       )}
 
-      <div className="topbar-logo">
-        Get Work Done
-      </div>
+      <button
+        onClick={onHome}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontFamily: 'var(--md-font)', padding: '4px 8px',
+        }}
+      >
+        <div className="topbar-logo">Get Work Done</div>
+      </button>
 
       {isGuest && (
         <span style={{
