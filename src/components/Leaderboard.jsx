@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Zap, CheckCircle2 } from 'lucide-react';
 import { getLeaderboard } from '../points';
-import PublicProfileModal from './PublicProfileModal';
+
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -19,10 +19,9 @@ function RankBadge({ rank }) {
   );
 }
 
-export default function Leaderboard({ uid, myPoints }) {
+export default function Leaderboard({ uid, myPoints, onViewProfile }) {
   const [board, setBoard] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewProfile, setViewProfile] = useState(null); // uid of profile to view
 
   useEffect(() => {
     async function load() {
@@ -83,7 +82,7 @@ export default function Leaderboard({ uid, myPoints }) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               marginBottom: 16, cursor: 'pointer',
             }}
-            onClick={() => setViewProfile(uid)}
+            onClick={() => onViewProfile(uid)}
             className="fade-in"
           >
             <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
@@ -117,7 +116,7 @@ export default function Leaderboard({ uid, myPoints }) {
             <div
               key={entry.uid}
               className="fade-in"
-              onClick={() => setViewProfile(entry.uid)}
+              onClick={() => onViewProfile(entry.uid)}
               style={{
                 background: isMe ? 'linear-gradient(135deg, var(--accent2)18, var(--bg2))' : 'var(--bg2)',
                 border: `1px solid ${isMe ? 'var(--accent)' : 'var(--border)'}`,
@@ -194,14 +193,6 @@ export default function Leaderboard({ uid, myPoints }) {
           );
         })}
       </div>
-
-      {viewProfile && (
-        <PublicProfileModal
-          targetUid={viewProfile}
-          myUid={uid}
-          onClose={() => setViewProfile(null)}
-        />
-      )}
     </div>
   );
 }

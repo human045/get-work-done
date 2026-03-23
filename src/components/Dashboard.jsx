@@ -223,7 +223,7 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
     if (!finishTarget) return;
     setWorks(works.filter(w => w.id !== finishTarget.id));
     await archiveWork(uid, { ...finishTarget, finishedAt: Date.now() });
-    if (uid) await awardFinishPoints(uid, finishTarget.stars);
+    if (uid) await awardFinishPoints(uid, finishTarget.stars, finishTarget.title, finishTarget.id);
     setFinishTarget(null);
   }
 

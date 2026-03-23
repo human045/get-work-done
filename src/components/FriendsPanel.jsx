@@ -32,7 +32,7 @@ const TABS = [
   { id: 'search',   label: 'Add',      Icon: UserPlus },
 ];
 
-export default function FriendsPanel({ user, isGuest }) {
+export default function FriendsPanel({ user, isGuest, onViewProfile }) {
   const [open, setOpen]             = useState(false);
   const [tab, setTab]               = useState('friends');
   const [friends, setFriends]       = useState([]);
@@ -257,6 +257,7 @@ export default function FriendsPanel({ user, isGuest }) {
                   index={i}
                   onChat={() => openChatWith(f)}
                   onRemove={() => removeFriend(uid, f.uid)}
+                  onViewProfile={() => { setOpen(false); onViewProfile(f.uid); }}
                 />
               ))
             )
@@ -323,6 +324,7 @@ export default function FriendsPanel({ user, isGuest }) {
                   alreadyFriend={isFriend(u.uid)}
                   pending={isPending(u.uid)}
                   onAdd={() => sendFriendRequest(uid, myName, myInits, u.uid)}
+                  onViewProfile={() => { setOpen(false); onViewProfile(u.uid); }}
                 />
               ))}
               {!searchTerm && (
@@ -389,7 +391,7 @@ function RowWrap({ index, children }) {
   );
 }
 
-function FriendRow({ friend, index, onChat, onRemove }) {
+function FriendRow({ friend, index, onChat, onRemove, onViewProfile }) {
   return (
     <RowWrap index={index}>
       <div style={{
@@ -398,13 +400,15 @@ function FriendRow({ friend, index, onChat, onRemove }) {
         color: 'var(--md-on-primary-cont)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 13, fontWeight: 700,
-      }}>
+        cursor: 'pointer',
+      }} onClick={onViewProfile} title="View profile">
         {(friend.displayName || 'U')[0].toUpperCase()}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onViewProfile}>
         <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {friend.displayName}
         </div>
+        <div style={{ fontSize: 11, color: 'var(--md-outline)' }}>View profile →</div>
       </div>
       <button onClick={onChat} className="btn-icon" style={{ color: 'var(--md-primary)', width: 32, height: 32 }} title="Chat">
         <MessageCircle size={16} />
@@ -495,7 +499,7 @@ function SearchInput({ value, onChange }) {
   );
 }
 
-function SearchResultRow({ user, index, alreadyFriend, pending, onAdd }) {
+function SearchResultRow({ user, index, alreadyFriend, pending, onAdd, onViewProfile }) {
   return (
     <RowWrap index={index}>
       <div style={{
@@ -503,11 +507,11 @@ function SearchResultRow({ user, index, alreadyFriend, pending, onAdd }) {
         background: 'var(--md-primary-container)',
         color: 'var(--md-on-primary-cont)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 13, fontWeight: 700,
-      }}>
+        fontSize: 13, fontWeight: 700, cursor: 'pointer',
+      }} onClick={onViewProfile}>
         {(user.displayName || 'U')[0].toUpperCase()}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={onViewProfile}>
         <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {user.displayName}
         </div>
