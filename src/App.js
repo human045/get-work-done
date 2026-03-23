@@ -11,7 +11,7 @@ import Dashboard from './components/Dashboard';
 import WorkPage from './components/WorkPage';
 import ProfilePage from './components/ProfilePage';
 import Leaderboard from './components/Leaderboard';
-import Chat from './components/Chat';
+import FriendsPanel from './components/FriendsPanel';
 
 const THEME_KEY = 'gwd_theme';
 const GUEST_KEY = 'gwd_guest';
@@ -142,7 +142,7 @@ export default function App() {
         />
       )}
       {loggedIn && (
-        <Chat user={user} isGuest={authState === 'guest'} />
+        <FriendsPanel user={user} isGuest={authState === 'guest'} myPoints={myPoints} />
       )}
     </div>
   );

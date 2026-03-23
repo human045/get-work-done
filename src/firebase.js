@@ -9,7 +9,7 @@ import {
 import {
   getFirestore, doc, setDoc, getDoc, deleteDoc,
   collection, getDocs, onSnapshot,
-  increment, updateDoc, query, orderBy, limit
+  increment, updateDoc, query, orderBy, limit, where
 } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -33,5 +33,5 @@ export {
   sendPasswordResetEmail,
   doc, setDoc, getDoc, deleteDoc,
   collection, getDocs, onSnapshot,
-  increment, updateDoc, query, orderBy, limit
+  increment, updateDoc, query, orderBy, limit, where
 };
