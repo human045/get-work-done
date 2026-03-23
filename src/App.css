@@ -989,6 +989,11 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   border-radius: var(--md-shape-full);
 }
 
+@keyframes chat-slide-in {
+  from { opacity: 0; transform: translateX(32px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .tasks-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--md-outline-var); }

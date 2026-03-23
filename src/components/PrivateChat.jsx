@@ -120,7 +120,7 @@ export default function PrivateChat({ myUid, myName, friend, onClose }) {
       boxShadow: 'var(--md-elev-4)',
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden', zIndex: 402,
-      animation: 'md-scale-in 0.25s cubic-bezier(0.05,0.7,0.1,1)',
+      animation: 'chat-slide-in 0.32s cubic-bezier(0.05,0.7,0.1,1) forwards',
     }}>
       {/* Header */}
       <div style={{
