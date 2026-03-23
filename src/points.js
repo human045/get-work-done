@@ -1,4 +1,4 @@
-import { db, doc, setDoc, getDoc, updateDoc, increment, collection, getDocs, query, orderBy, limit } from './firebase';
+import { db, doc, setDoc, getDoc, updateDoc, increment, collection, getDocs, query, orderBy, limit, where } from './firebase';
 
 // ── Point values ─────────────────────────────────────────────────
 export const POINTS = {
@@ -91,4 +91,24 @@ export async function getPublicProfile(uid) {
   const ref = doc(db, 'leaderboard', uid);
   const snap = await getDoc(ref);
   return snap.exists() ? snap.data() : null;
+}
+
+// ── Profile editing ───────────────────────────────────────────────
+export async function updateProfile(uid, { displayName, username, avatarColor, status }) {
+  if (!uid) return;
+  const ref = doc(db, 'leaderboard', uid);
+  const updates = { updatedAt: Date.now() };
+  if (displayName !== undefined) updates.displayName = displayName.trim().slice(0, 40);
+  if (username   !== undefined) updates.username    = username.trim().toLowerCase().slice(0, 20);
+  if (avatarColor !== undefined) updates.avatarColor = avatarColor;
+  if (status     !== undefined) updates.status      = status.trim().slice(0, 80);
+  await updateDoc(ref, updates);
+}
+
+export async function isUsernameTaken(username, myUid) {
+  if (!username.trim()) return false;
+  const q = query(collection(db, 'leaderboard'), where('username', '==', username.trim().toLowerCase()));
+  const snap = await getDocs(q);
+  // taken if exists and not by current user
+  return snap.docs.some(d => d.id !== myUid);
 }

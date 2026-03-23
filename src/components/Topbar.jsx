@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun } from 'lucide-react';
+import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun, Settings } from 'lucide-react';
 import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
-export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, myPoints, onHome }) {
+export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, onOpenSettings, myPoints, onHome }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const themeRef = useRef(null);
@@ -149,6 +149,11 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
               {!isGuest && (
                 <button className="dropdown-item" onClick={() => { setUserOpen(false); onOpenProfile(); }}>
                   <User size={16} /> View Profile
+                </button>
+              )}
+              {!isGuest && (
+                <button className="dropdown-item" onClick={() => { setUserOpen(false); onOpenSettings(); }}>
+                  <Settings size={16} /> Settings
                 </button>
               )}
               <button className="dropdown-item" onClick={() => { setUserOpen(false); onOpenLeaderboard(); }}>

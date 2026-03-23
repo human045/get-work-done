@@ -13,6 +13,7 @@ import ProfilePage from './components/ProfilePage';
 import PublicProfilePage from './components/PublicProfilePage';
 import Leaderboard from './components/Leaderboard';
 import FriendsPanel from './components/FriendsPanel';
+import SettingsPage from './components/SettingsPage';
 
 const THEME_KEY  = 'gwd_theme';
 const GUEST_KEY  = 'gwd_guest';
@@ -156,6 +157,7 @@ export default function App() {
         onSignOut={handleSignOut}
         onOpenProfile={() => setPage('profile')}
         onOpenLeaderboard={() => setPage('leaderboard')}
+        onOpenSettings={() => setPage('settings')}
       />
 
       {!loggedIn ? (
@@ -181,6 +183,12 @@ export default function App() {
           uid={uid}
           myPoints={myPoints}
           onViewProfile={openPublicProfile}
+        />
+      ) : page === 'settings' ? (
+        <SettingsPage
+          user={user}
+          myPoints={myPoints}
+          onPointsRefresh={() => refreshPoints(uid)}
         />
       ) : page === 'publicProfile' && publicUid ? (
         <PublicProfilePage

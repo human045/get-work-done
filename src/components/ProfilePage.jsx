@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Trash2, Pencil, Check, X } from 'lucide-react';
 import { getDeletedWorks, permanentDelete } from '../storage';
 import { setUserStatus } from '../points';
+import { resolveAvatarBg } from './SettingsPage';
 import ConfirmModal from './ConfirmModal';
 import PointsBreakdownModal from './PointsBreakdownModal';
 
@@ -106,7 +107,7 @@ export default function ProfilePage({ user, isGuest, uid, myPoints }) {
         <div style={{ textAlign: 'center', marginBottom: 20 }} className="fade-in">
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--accent2), var(--accent))',
+            background: resolveAvatarBg(myPoints?.avatarColor),
             color: '#fff', fontSize: 22, fontWeight: 700,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 12,
