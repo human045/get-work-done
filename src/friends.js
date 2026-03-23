@@ -36,6 +36,15 @@ export async function acceptFriendRequest(req, myUid, myName, myInitials) {
     uid: myUid, displayName: myName, initials: myInitials,
     since: Date.now(),
   });
+  // Pre-create the private chat document with both participants
+  // so Firestore rules can verify membership for both users immediately
+  const cid = chatId(myUid, req.from);
+  await setDoc(doc(db, 'privateChats', cid), {
+    participants: [myUid, req.from],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }, { merge: true });
+
   await deleteDoc(doc(db, 'friendRequests', req.id));
 }
 
@@ -68,6 +77,14 @@ export function listenOutgoingRequests(uid, cb) {
 // ── Private chat ──────────────────────────────────────────────────────────────
 export async function sendMessage(myUid, myName, friendUid, text) {
   const cid = chatId(myUid, friendUid);
+
+  // Ensure the parent chat doc exists with participants list
+  // (setDoc with merge won't overwrite if already exists)
+  await setDoc(doc(db, 'privateChats', cid), {
+    participants: [myUid, friendUid],
+    updatedAt: Date.now(),
+  }, { merge: true });
+
   const id = generateId();
   await setDoc(doc(db, 'privateChats', cid, 'messages', id), {
     id, uid: myUid, displayName: myName,
