@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, ChevronRight, CheckCircle2 } from 'lucide-react';
 import {
   DndContext, DragOverlay, PointerSensor, TouchSensor,
-  useSensor, useSensors, useDraggable, pointerWithin,
+  useSensor, useSensors, useDraggable,
+  pointerWithin, closestCenter,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import StarRating from './StarRating';
@@ -75,6 +76,8 @@ function DraggableCard({ work, onOpen, onFinish, onEdit, onDelete, isDragging })
     willChange: 'transform, opacity',
     outline: thisDragging ? `2px dashed color-mix(in srgb, var(--md-primary) 50%, transparent)` : 'none',
     outlineOffset: 4,
+    touchAction: 'none', // prevents browser scroll hijacking touch drag
+    userSelect: 'none',
   };
 
   return (
@@ -146,11 +149,23 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
     .filter(w => (w.workspaceId || 'general') === activeWsId)
     .sort((a, b) => b.stars - a.stars);
 
-  // Require 8px movement — prevents accidental drags on click
+  // Touch-friendly sensors
+  // PointerSensor handles mouse. TouchSensor with no delay handles touch —
+  // tolerance:10 allows small finger movement without cancelling drag
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 10 },
+    }),
   );
+
+  // Custom collision: try pointerWithin first (accurate for mouse),
+  // fall back to closestCenter (better for touch where pointer coords differ)
+  function collisionDetection(args) {
+    const pointer = pointerWithin(args);
+    if (pointer.length > 0) return pointer;
+    return closestCenter(args);
+  }
 
   function handleDragStart({ active }) {
     const work = works.find(w => w.id === active.id);
@@ -221,7 +236,7 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
         }
       `}</style>
 
-      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           <WorkspaceBar

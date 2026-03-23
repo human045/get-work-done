@@ -11,6 +11,7 @@ import Dashboard from './components/Dashboard';
 import WorkPage from './components/WorkPage';
 import ProfilePage from './components/ProfilePage';
 import Leaderboard from './components/Leaderboard';
+import Chat from './components/Chat';
 
 const THEME_KEY = 'gwd_theme';
 const GUEST_KEY = 'gwd_guest';
@@ -139,6 +140,9 @@ export default function App() {
           onOpenWork={openWorkPage}
           onOpenProfile={() => setPage('profile')}
         />
+      )}
+      {loggedIn && (
+        <Chat user={user} isGuest={authState === 'guest'} />
       )}
     </div>
   );
