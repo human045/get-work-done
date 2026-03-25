@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Check, X, FolderOpen } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
+import EmojiPicker from 'emoji-picker-react';
 import { saveWorkspace, deleteWorkspace, generateId } from '../storage';
 
 // MD3 motion curves
@@ -93,7 +94,11 @@ function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, on
             whiteSpace: 'nowrap',
           }}
         >
-          {ws.isDefault && <FolderOpen size={isDragging ? 15 : 13} style={{ transition: `all 300ms ${EASING.emphasizedDecel}` }} />}
+          {ws.isDefault ? (
+            <FolderOpen size={isDragging ? 15 : 13} style={{ transition: `all 300ms ${EASING.emphasizedDecel}` }} />
+          ) : (
+            <span style={{ fontSize: isDragging ? 15 : 13, lineHeight: 1 }}>{ws.icon || '📁'}</span>
+          )}
           {ws.name}
           {isActive && !ws.isDefault && (
             <span style={{ display: 'flex', gap: 1, marginLeft: 2 }}>
@@ -149,21 +154,30 @@ export default function WorkspaceBar({
 }) {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newIcon, setNewIcon] = useState('');
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState('');
+  const [editIcon, setEditIcon] = useState('');
+  const [pickerState, setPickerState] = useState(null); // 'create' | 'edit' | null
+
+  const handleEmojiClick = (emojiObj) => {
+    if (pickerState === 'create') setNewIcon(emojiObj.emoji);
+    else if (pickerState === 'edit') setEditIcon(emojiObj.emoji);
+    setPickerState(null);
+  };
 
   async function handleCreate() {
     if (!newName.trim()) { setCreating(false); return; }
-    const ws = { id: generateId(), name: newName.trim(), createdAt: Date.now() };
+    const ws = { id: generateId(), name: newName.trim(), icon: newIcon || '📁', createdAt: Date.now() };
     setWorkspaces([...workspaces, ws]);
     await saveWorkspace(uid, ws);
     setActiveId(ws.id);
-    setNewName(''); setCreating(false);
+    setNewName(''); setNewIcon(''); setCreating(false);
   }
 
   async function handleRename(ws) {
-    if (!editName.trim() || editName.trim() === ws.name) { setEditId(null); return; }
-    const updated = { ...ws, name: editName.trim() };
+    if (!editName.trim() || (editName.trim() === ws.name && editIcon === (ws.icon || '📁'))) { setEditId(null); return; }
+    const updated = { ...ws, name: editName.trim(), icon: editIcon || '📁' };
     setWorkspaces(workspaces.map(w => w.id === ws.id ? updated : w));
     await saveWorkspace(uid, updated);
     setEditId(null);
@@ -247,6 +261,18 @@ export default function WorkspaceBar({
           editId === ws.id ? (
             <div key={ws.id} style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <input
+                value={editIcon}
+                readOnly
+                onClick={() => setPickerState('edit')}
+                placeholder="📁"
+                style={{
+                  background: 'var(--md-surface-2)', border: '1px solid var(--md-primary)',
+                  borderRadius: 'var(--md-shape-sm)', padding: '3px 6px',
+                  color: 'var(--md-on-surface)', fontSize: 13, width: 28, textAlign: 'center',
+                  fontFamily: 'var(--md-font)', outline: 'none', cursor: 'pointer'
+                }}
+              />
+              <input
                 autoFocus
                 value={editName}
                 onChange={e => setEditName(e.target.value)}
@@ -272,7 +298,7 @@ export default function WorkspaceBar({
               isDragging={isDragging}
               dropSuccess={dropSuccess}
               onClick={() => setActiveId(ws.id)}
-              onStartEdit={() => { setEditName(ws.name); setEditId(ws.id); }}
+              onStartEdit={() => { setEditIcon(ws.icon === '📁' ? '' : (ws.icon || '')); setEditName(ws.name); setEditId(ws.id); }}
               onDelete={() => handleDelete(ws)}
             />
           )
@@ -283,12 +309,24 @@ export default function WorkspaceBar({
           creating ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <input
+                value={newIcon}
+                readOnly
+                onClick={() => setPickerState('create')}
+                placeholder="📁"
+                style={{
+                  background: 'var(--md-surface-2)', border: '1px solid var(--md-primary)',
+                  borderRadius: 'var(--md-shape-sm)', padding: '3px 6px',
+                  color: 'var(--md-on-surface)', fontSize: 13, width: 28, textAlign: 'center',
+                  fontFamily: 'var(--md-font)', outline: 'none', cursor: 'pointer'
+                }}
+              />
+              <input
                 autoFocus
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => {
                   if (e.key === 'Enter') handleCreate();
-                  if (e.key === 'Escape') { setCreating(false); setNewName(''); }
+                  if (e.key === 'Escape') { setCreating(false); setNewName(''); setNewIcon(''); }
                 }}
                 placeholder="Workspace name"
                 maxLength={30}
@@ -300,7 +338,7 @@ export default function WorkspaceBar({
                 }}
               />
               <button onClick={handleCreate} className="btn-icon" style={{ width: 26, height: 26 }}><Check size={13} /></button>
-              <button onClick={() => { setCreating(false); setNewName(''); }} className="btn-icon" style={{ width: 26, height: 26 }}><X size={13} /></button>
+              <button onClick={() => { setCreating(false); setNewName(''); setNewIcon(''); }} className="btn-icon" style={{ width: 26, height: 26 }}><X size={13} /></button>
             </div>
           ) : (
             <button
@@ -312,6 +350,16 @@ export default function WorkspaceBar({
               <Plus size={15} />
             </button>
           )
+        )}
+        
+        {/* Emoji Picker Popover */}
+        {pickerState && (
+          <div style={{ position: 'absolute', top: 50, zIndex: 9999, left: pickerState === 'create' ? 100 : 16 }}>
+            <div style={{ position: 'fixed', inset: 0 }} onClick={() => setPickerState(null)} />
+            <div style={{ position: 'relative' }}>
+              <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" />
+            </div>
+          </div>
         )}
       </div>
     </>

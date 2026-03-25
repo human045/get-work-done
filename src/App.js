@@ -15,6 +15,8 @@ import PublicProfilePage from './components/PublicProfilePage';
 import Leaderboard from './components/Leaderboard';
 import FriendsPanel from './components/FriendsPanel';
 import SettingsPage from './components/SettingsPage';
+import PomodoroTimer from './components/PomodoroTimer';
+import UpcomingPage from './components/UpcomingPage';
 
 const THEME_KEY  = 'gwd_theme';
 const GUEST_KEY  = 'gwd_guest';
@@ -192,7 +194,7 @@ export default function App() {
           {!loggedIn ? (
             <AuthScreen onGuest={handleGuest} />
           ) : page === 'work' && openWork ? (
-            <WorkPage key={openWork.id} work={openWork} uid={uid} onBack={goBack} onWorkUpdate={handleWorkUpdate} />
+            <WorkPage key={openWork.id} work={openWork} uid={uid} myPoints={myPoints} onBack={goBack} onWorkUpdate={handleWorkUpdate} />
           ) : page === 'profile' ? (
             <ProfilePage user={user} isGuest={authState === 'guest'} uid={uid} myPoints={myPoints} onViewPublicProfile={openPublicProfile} />
           ) : page === 'leaderboard' ? (
@@ -201,6 +203,10 @@ export default function App() {
             <SettingsPage user={user} myPoints={myPoints} onPointsRefresh={refreshPoints} />
           ) : page === 'publicProfile' && publicUid ? (
             <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.displayName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
+          ) : page === 'pomodoro' ? (
+            <PomodoroTimer works={works} onWorkUpdate={handleWorkUpdate} uid={uid} />
+          ) : page === 'upcoming' ? (
+            <UpcomingPage works={works} onOpenWork={openWorkPage} workspaces={workspaces} />
           ) : (
             <Dashboard
               works={works}

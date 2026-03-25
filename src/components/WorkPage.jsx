@@ -4,7 +4,7 @@ import StarRating from './StarRating';
 import { saveWork, generateId } from '../storage';
 import { awardTaskPoints } from '../points';
 
-const MAX_TODOS = 3;
+
 
 function formatTime(ts) {
   const d = new Date(ts);
@@ -31,7 +31,7 @@ function PointsToast({ pts, visible }) {
   );
 }
 
-export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate }) {
+export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onWorkUpdate }) {
   const [work, setWork] = useState(initialWork);
   const [todoInput, setTodoInput] = useState('');
   const [saved, setSaved] = useState(false);
@@ -41,6 +41,9 @@ export default function WorkPage({ work: initialWork, uid, onBack, onWorkUpdate 
 
   const activeTodos = work.todos || [];
   const history = work.history || [];
+
+  const hasUpgrade = myPoints?.purchasedItems?.includes('todoUpgrade5');
+  const MAX_TODOS = hasUpgrade ? 8 : 3;
 
   function showToast(pts) {
     setToast({ visible: true, pts });

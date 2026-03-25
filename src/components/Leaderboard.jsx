@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Zap, CheckCircle2 } from 'lucide-react';
-import { getLeaderboard } from '../points';
-
+import { Trophy, Zap, CheckCircle2, ShoppingCart } from 'lucide-react';
+import { getLeaderboard, buyShopItem } from '../points';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
+
+function getLeague(trophies) {
+  if (trophies >= 4100) return { name: 'Legend', color: '#c46bfa', icon: '🔥' };
+  if (trophies >= 3200) return { name: 'Titan', color: '#f54242', icon: '⚔️' };
+  if (trophies >= 2600) return { name: 'Champion', color: '#ff4d4d', icon: '🌟' };
+  if (trophies >= 2000) return { name: 'Master', color: '#000000', icon: '🖤', textColor: '#fff' };
+  if (trophies >= 1400) return { name: 'Crystal', color: '#e838c6', icon: '💎' };
+  if (trophies >= 800) return { name: 'Gold', color: '#f0ce3e', icon: '🏆' };
+  if (trophies >= 400) return { name: 'Silver', color: '#b5b5b5', icon: '🥈' };
+  return { name: 'Bronze', color: '#c48956', icon: '🥉' };
+}
 
 function RankBadge({ rank }) {
   if (rank < 3) return <span style={{ fontSize: 18, lineHeight: 1 }}>{MEDAL[rank]}</span>;
@@ -22,18 +32,39 @@ function RankBadge({ rank }) {
 export default function Leaderboard({ uid, myPoints, onViewProfile }) {
   const [board, setBoard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [buying, setBuying] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const data = await getLeaderboard(20);
+    setBoard(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const data = await getLeaderboard(20);
-      setBoard(data);
-      setLoading(false);
-    }
     load();
   }, []);
 
   const myRank = board.findIndex(u => u.uid === uid);
+  const ptsBalance = myPoints?.pointsBalance !== undefined ? myPoints.pointsBalance : (myPoints?.totalPoints || 0);
+
+  async function handleBuy(itemId, cost) {
+    if (buying) return;
+    setBuying(true);
+    const success = await buyShopItem(uid, cost, itemId);
+    if (success) {
+      // Optimistically update myPoints object reference
+      myPoints.pointsBalance = ptsBalance - cost;
+      if (!myPoints.purchasedItems) myPoints.purchasedItems = [];
+      myPoints.purchasedItems.push(itemId);
+      alert('Purchase successful!');
+    } else {
+      alert('Purchase failed. Not enough points or already owned.');
+    }
+    setBuying(false);
+  }
+
+  const hasUpgrade = myPoints?.purchasedItems?.includes('todoUpgrade5');
 
   return (
     <div style={{
@@ -46,23 +77,68 @@ export default function Leaderboard({ uid, myPoints, onViewProfile }) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 28 }} className="fade-in">
           <div style={{ fontSize: 32, marginBottom: 8 }}>🏆</div>
-          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.4px' }}>Leaderboard</div>
+          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.4px' }}>Leaderboard & Shop</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 4 }}>
-            Top users ranked by total points · click any player to view their profile
+            Climb the leagues and spend your points!
           </div>
         </div>
 
-        {/* Point guide */}
+        {/* Point Shop */}
+        {uid && myPoints && (
+          <div style={{
+            background: 'var(--bg2)', border: '1px solid var(--border)',
+            borderRadius: 10, padding: '16px',
+            marginBottom: 24,
+          }} className="fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                <ShoppingCart size={16} style={{ color: 'var(--accent)' }} />
+                Point Shop
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--mono)', color: 'var(--accent)' }}>
+                Balance: {ptsBalance} pts
+              </div>
+            </div>
+
+            {/* Shop Item */}
+            <div style={{
+              background: 'var(--bg)', border: '1px solid var(--border)',
+              borderRadius: 8, padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>5 Extra To-Dos Upgrade</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>Increases max task limit to 8 per work.</div>
+              </div>
+              <button
+                disabled={hasUpgrade || ptsBalance < 500 || buying}
+                onClick={() => handleBuy('todoUpgrade5', 500)}
+                style={{
+                  background: hasUpgrade ? 'var(--bg3)' : 'var(--accent)',
+                  color: hasUpgrade ? 'var(--text3)' : '#fff',
+                  border: 'none', padding: '6px 12px', borderRadius: 6,
+                  fontSize: 12, fontWeight: 600, cursor: (hasUpgrade || ptsBalance < 500) ? 'not-allowed' : 'pointer',
+                  opacity: (hasUpgrade || ptsBalance < 500) ? 0.7 : 1,
+                  display: 'flex', alignItems: 'center', gap: 4
+                }}
+              >
+                {hasUpgrade ? 'Owned' : '500 pts'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Trophy guide */}
         <div style={{
           background: 'var(--bg2)', border: '1px solid var(--border)',
           borderRadius: 10, padding: '14px 18px',
           display: 'flex', gap: 20, justifyContent: 'center',
           marginBottom: 24, flexWrap: 'wrap',
         }} className="fade-in">
+          <div style={{ width: '100%', fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Earn Trophies & Points</div>
           {[
-            { icon: <CheckCircle2 size={13} />, label: 'Task done', pts: '+10 pts', color: 'var(--success)' },
-            { icon: <Zap size={13} />, label: 'Work finished', pts: '+50–75 pts', color: 'var(--star-active)' },
-            { icon: <Trophy size={13} />, label: '5★ work bonus', pts: '+25 pts', color: 'var(--accent)' },
+            { icon: <CheckCircle2 size={13} />, label: 'Task done', pts: '+10', color: 'var(--success)' },
+            { icon: <Zap size={13} />, label: 'Work finished', pts: '+50', color: 'var(--star-active)' },
+            { icon: <Trophy size={13} />, label: '5★ work', pts: '+25', color: 'var(--accent)' },
           ].map(item => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
               <span style={{ color: item.color }}>{item.icon}</span>
@@ -88,8 +164,11 @@ export default function Leaderboard({ uid, myPoints, onViewProfile }) {
             <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>
               Your rank: #{myRank + 1}
             </div>
-            <div style={{ fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--accent)', fontWeight: 700 }}>
-              {myPoints.totalPoints} pts
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 13 }}>{getLeague(myPoints.totalPoints || 0).icon}</span>
+              <div style={{ fontSize: 13, fontFamily: 'var(--mono)', color: 'var(--accent)', fontWeight: 700 }}>
+                {myPoints.totalPoints} Trophies
+              </div>
             </div>
           </div>
         )}
@@ -112,6 +191,8 @@ export default function Leaderboard({ uid, myPoints, onViewProfile }) {
 
         {!loading && board.map((entry, i) => {
           const isMe = entry.uid === uid;
+          const league = getLeague(entry.totalPoints || 0);
+
           return (
             <div
               key={entry.uid}
@@ -168,14 +249,21 @@ export default function Leaderboard({ uid, myPoints, onViewProfile }) {
                       fontWeight: 600, letterSpacing: '0.05em',
                     }}>YOU</span>
                   )}
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10,
+                    background: 'color-mix(in srgb, ' + league.color + ' 20%, transparent)',
+                    color: league.color, marginLeft: 4, display: 'flex', alignItems: 'center', gap: 3
+                  }}>
+                    {league.icon} {league.name}
+                  </div>
                 </div>
                 {entry.status ? (
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1, fontStyle: 'italic',
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3, fontStyle: 'italic',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     "{entry.status}"
                   </div>
                 ) : (
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
                     {entry.tasksCompleted || 0} tasks · {entry.worksFinished || 0} finished
                   </div>
                 )}
@@ -183,11 +271,11 @@ export default function Leaderboard({ uid, myPoints, onViewProfile }) {
 
               <div style={{
                 fontSize: 15, fontWeight: 700,
-                color: i === 0 ? '#f0883e' : i === 1 ? '#8b949e' : i === 2 ? '#b08a60' : 'var(--text)',
-                fontFamily: 'var(--mono)', flexShrink: 0,
+                color: league.color,
+                fontFamily: 'var(--mono)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6
               }}>
+                <Trophy size={14} />
                 {entry.totalPoints || 0}
-                <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--text3)', marginLeft: 3 }}>pts</span>
               </div>
             </div>
           );

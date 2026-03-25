@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Home, Clock, ChevronDown,
   FolderOpen, Plus, Folder, PanelLeftClose, PanelLeftOpen,
-  Star, Calendar
+  Star, Calendar, Timer
 } from 'lucide-react';
 
 const E = {
@@ -106,6 +106,7 @@ export default function Sidebar({
 }) {
   const [recentOpen, setRecentOpen]     = useState(true);
   const [workspacesOpen, setWsOpen]     = useState(true);
+  const [toolsOpen, setToolsOpen]       = useState(true);
 
   const allWs = [{ id: 'general', name: 'General' }, ...workspaces];
 
@@ -124,7 +125,8 @@ export default function Sidebar({
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden',
       transition: `width 280ms ${E.decel}, min-width 280ms ${E.decel}`,
-      willChange: 'width',
+      willChange: 'width, transform',
+      transform: 'translateZ(0)',
     }}>
       {/* ── Top actions ── */}
       <div style={{ padding: collapsed ? '8px 6px' : '8px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -162,6 +164,25 @@ export default function Sidebar({
         ) : (
           <NavItem icon={<Home size={16} />} label="Home" active={page === 'dashboard'} onClick={() => setPage('dashboard')} />
         )}
+
+        {/* Upcoming */}
+        {collapsed ? (
+          <button
+            onClick={() => setPage('upcoming')}
+            title="Upcoming"
+            style={{
+              alignSelf: 'center', background: page === 'upcoming' ? 'color-mix(in srgb, var(--md-primary) 16%, transparent)' : 'none',
+              border: 'none', cursor: 'pointer', color: page === 'upcoming' ? 'var(--md-primary)' : 'var(--md-outline)',
+              padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex', alignItems: 'center',
+            }}
+          >
+            <Calendar size={18} />
+          </button>
+        ) : (
+          <NavItem icon={<Calendar size={16} />} label="Upcoming" active={page === 'upcoming'} onClick={() => setPage('upcoming')} />
+        )}
+
+
 
         {/* New Work FAB-like */}
         {!collapsed && (
@@ -250,10 +271,11 @@ export default function Sidebar({
               <div style={{ marginBottom: 4 }}>
                 {allWs.map(ws => {
                   const count = works.filter(w => (w.workspaceId || 'general') === ws.id).length;
+                  const wsIcon = ws.id === 'general' ? <FolderOpen size={13} /> : <span style={{ fontSize: 13, lineHeight: 1 }}>{ws.icon || '📁'}</span>;
                   return (
                     <NavItem
                       key={ws.id}
-                      icon={ws.id === 'general' ? <FolderOpen size={13} /> : <Folder size={13} />}
+                      icon={wsIcon}
                       label={ws.name}
                       indent
                       active={page === 'dashboard' && activeWsId === ws.id}
@@ -281,13 +303,43 @@ export default function Sidebar({
                     background: active ? 'color-mix(in srgb, var(--md-primary) 16%, transparent)' : 'none',
                     border: 'none', cursor: 'pointer',
                     color: active ? 'var(--md-primary)' : 'var(--md-outline)',
-                    padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex',
+                    padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}
                 >
-                  {ws.id === 'general' ? <FolderOpen size={16} /> : <Folder size={16} />}
+                  {ws.id === 'general' ? <FolderOpen size={16} /> : <span style={{ fontSize: 16, lineHeight: 1, display: 'inline-block' }}>{ws.icon || '📁'}</span>}
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Tools ── */}
+        {!collapsed && (
+          <>
+            <SectionHeader label="Tools" open={toolsOpen} onToggle={() => setToolsOpen(o => !o)} />
+            {toolsOpen && (
+              <div style={{ marginBottom: 4 }}>
+                <NavItem icon={<Timer size={13} />} label="Pomodoro" active={page === 'pomodoro'} onClick={() => setPage('pomodoro')} indent />
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Collapsed tools icons */}
+        {collapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, marginTop: 4 }}>
+             <button
+                onClick={() => setPage('pomodoro')}
+                title="Pomodoro Timer"
+                style={{
+                  background: page === 'pomodoro' ? 'color-mix(in srgb, var(--md-primary) 16%, transparent)' : 'none',
+                  border: 'none', cursor: 'pointer',
+                  color: page === 'pomodoro' ? 'var(--md-primary)' : 'var(--md-outline)',
+                  padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex',
+                }}
+              >
+                <Timer size={16} />
+              </button>
           </div>
         )}
 

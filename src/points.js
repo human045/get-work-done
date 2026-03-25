@@ -24,13 +24,20 @@ export async function ensureLeaderboardEntry(uid, displayName, initials) {
       displayName: displayName || 'User',
       initials: initials || '?',
       totalPoints: 0,
+      pointsBalance: 0,
+      purchasedItems: [],
       tasksCompleted: 0,
       worksFinished: 0,
       updatedAt: Date.now(),
     });
   } else {
     // Always keep name fresh
-    await updateDoc(ref, { displayName: displayName || 'User', initials: initials || '?', updatedAt: Date.now() });
+    const data = snap.data();
+    const updates = { displayName: displayName || 'User', initials: initials || '?', updatedAt: Date.now() };
+    if (data.pointsBalance === undefined) {
+      updates.pointsBalance = data.totalPoints || 0;
+    }
+    await updateDoc(ref, updates);
   }
 }
 
@@ -39,6 +46,7 @@ export async function awardTaskPoints(uid) {
   const ref = doc(db, 'leaderboard', uid);
   await updateDoc(ref, {
     totalPoints: increment(POINTS.TASK_COMPLETE),
+    pointsBalance: increment(POINTS.TASK_COMPLETE),
     tasksCompleted: increment(1),
     updatedAt: Date.now(),
   });
@@ -61,6 +69,7 @@ export async function awardFinishPoints(uid, stars, workTitle, workId) {
   const updated = [entry, ...current].slice(0, 10);
   await updateDoc(ref, {
     totalPoints: increment(pts),
+    pointsBalance: increment(pts),
     worksFinished: increment(1),
     finishedWorks: updated,
     updatedAt: Date.now(),
@@ -78,6 +87,26 @@ export async function getLeaderboard(n = 20) {
   const q = query(collection(db, 'leaderboard'), orderBy('totalPoints', 'desc'), limit(n));
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data());
+}
+
+export async function buyShopItem(uid, cost, itemId) {
+  if (!uid) return false;
+  const ref = doc(db, 'leaderboard', uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return false;
+  
+  const data = snap.data();
+  const balance = data.pointsBalance !== undefined ? data.pointsBalance : (data.totalPoints || 0);
+  
+  if (balance < cost) return false;
+  if ((data.purchasedItems || []).includes(itemId)) return false;
+  
+  await updateDoc(ref, {
+    pointsBalance: increment(-cost),
+    purchasedItems: [...(data.purchasedItems || []), itemId],
+    updatedAt: Date.now()
+  });
+  return true;
 }
 
 export async function setUserStatus(uid, status) {

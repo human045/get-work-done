@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&family=Roboto+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -56,8 +56,9 @@
   --md-shape-full:  9999px;
 
   /* Typography */
-  --md-font:        'Roboto Flex', sans-serif;
-  --md-mono:        'Roboto Mono', monospace;
+  --md-font:        'Inter', sans-serif;
+  --md-font-display:'Outfit', sans-serif;
+  --md-mono:        'JetBrains Mono', monospace;
 
   /* Legacy aliases (keeps components working) */
   --bg:           var(--md-surface);
@@ -85,8 +86,9 @@
 
 /* 1. Purple Night (default — MD3 baseline dark) */
 [data-theme="purple-night"] {
-  --md-surface: #1c1b1f; --md-surface-1: #2b2930; --md-surface-2: #312f36;
+  --md-surface: #0a0514; --md-surface-1: #1a1525; --md-surface-2: #241d36;
   --md-surface-3: #37353d; --md-surface-variant: #49454f;
+  --app-bg: radial-gradient(circle at top right, #2e1065 0%, #0a0514 60%);
   --md-on-surface: #e6e1e5; --md-on-surface-var: #cac4d0;
   --md-outline: #938f99; --md-outline-var: #49454f;
   --md-primary: #d0bcff; --md-on-primary: #381e72;
@@ -191,7 +193,7 @@
 html, body, #root {
   height: 100%;
   font-family: var(--md-font);
-  background: var(--md-surface);
+  background: var(--app-bg, var(--md-surface));
   color: var(--md-on-surface);
   -webkit-font-smoothing: antialiased;
   transition: background 0.3s, color 0.3s;
@@ -229,7 +231,9 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 /* ── TOP APP BAR (MD3) ───────────────────────────────────────── */
 .topbar {
   height: 64px;
-  background: var(--md-surface-1);
+  background: color-mix(in srgb, var(--md-surface-1) 60%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   padding: 0 16px 0 4px;
@@ -241,8 +245,9 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 }
 
 .topbar-logo {
-  font-size: 22px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: var(--md-font-display);
   letter-spacing: 0;
   color: var(--md-on-surface);
   display: flex;
@@ -309,15 +314,18 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 .btn:active::after { opacity: 0.14; }
 
 .btn-primary {
-  background: var(--md-primary);
+  background: linear-gradient(135deg, var(--md-primary), var(--md-tertiary));
   color: var(--md-on-primary);
   width: 100%;
   justify-content: center;
   padding: 10px 24px;
-  box-shadow: var(--md-elev-1);
+  box-shadow: 0 4px 14px 0 color-mix(in srgb, var(--md-primary) 40%, transparent);
 }
-.btn-primary:hover { box-shadow: var(--md-elev-2); }
-.btn-primary:active { box-shadow: none; }
+.btn-primary:hover { 
+  box-shadow: 0 6px 20px 0 color-mix(in srgb, var(--md-primary) 60%, transparent);
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: translateY(0); box-shadow: none; }
 
 /* Tonal button */
 .btn-outline {
@@ -591,15 +599,19 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 
 /* ── MD3 CARD ────────────────────────────────────────────────── */
 .work-card {
-  background: var(--md-surface-1);
-  border-radius: var(--md-shape-lg);
+  background: color-mix(in srgb, var(--md-surface-1) 80%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--md-shape-xl);
+  border: 1px solid color-mix(in srgb, var(--md-outline) 20%, transparent);
   padding: 16px;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: box-shadow 0.3s, transform 0.3s, border-color 0.3s;
   position: relative;
   overflow: hidden;
   box-shadow: var(--md-elev-1);
-  border: none;
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
 }
 .work-card::after {
   content: '';
@@ -612,8 +624,9 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   pointer-events: none;
 }
 .work-card:hover {
-  box-shadow: var(--md-elev-3);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--md-primary) 15%, transparent);
+  transform: translateY(-3px) scale(1.01);
+  border-color: color-mix(in srgb, var(--md-primary) 40%, transparent);
 }
 .work-card:hover::after { opacity: 0.05; }
 .work-card:active { transform: translateY(0); box-shadow: var(--md-elev-1); }
