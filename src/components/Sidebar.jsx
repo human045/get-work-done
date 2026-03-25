@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import {
   Home, Clock, ChevronDown,
+<<<<<<< HEAD
   FolderOpen, Plus, Folder, PanelLeftClose, PanelLeftOpen,
+=======
+  FolderOpen, Plus, PanelLeftClose, PanelLeftOpen,
+>>>>>>> f1c126b (fix of pomodoro bug)
   Star, Calendar, Timer
 } from 'lucide-react';
 
