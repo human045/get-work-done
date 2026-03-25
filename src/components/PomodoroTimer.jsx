@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Settings, Check, Search, Trash2 } from 'lucide-react';
-import { generateId, saveWork } from '../storage';
-=======
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Settings, Search } from 'lucide-react';
 import { saveWork } from '../storage';
->>>>>>> f1c126b (fix of pomodoro bug)
 import { awardTaskPoints } from '../points';
 import './PomodoroTimer.css';
 
@@ -31,9 +25,6 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
     if (!isRunning) {
       setTimeLeft(mode === 'work' ? workDuration * 60 : breakDuration * 60);
     }
-<<<<<<< HEAD
-  }, [workDuration, breakDuration, mode]);
-=======
   }, [workDuration, breakDuration, mode, isRunning]);
 
   const handleComplete = useCallback(() => {
@@ -42,7 +33,6 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
     // Auto-switch mode or play sound can be added here
     setMode(prevMode => prevMode === 'work' ? 'break' : 'work');
   }, []);
->>>>>>> f1c126b (fix of pomodoro bug)
 
   useEffect(() => {
     if (isRunning) {
@@ -59,18 +49,7 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-<<<<<<< HEAD
-  }, [isRunning, mode, workDuration, breakDuration]);
-
-  function handleComplete() {
-    setIsRunning(false);
-    clearInterval(timerRef.current);
-    // Auto-switch mode or play sound can be added here
-    setMode(mode === 'work' ? 'break' : 'work');
-  }
-=======
   }, [isRunning, handleComplete]);
->>>>>>> f1c126b (fix of pomodoro bug)
 
   function toggleTimer() {
     setIsRunning(!isRunning);
