@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, ChevronRight, CheckCircle2, Calendar } from 'lucide-react';
 import {
   DndContext, DragOverlay, PointerSensor, TouchSensor,
   useSensor, useSensors, useDraggable,
@@ -10,203 +10,210 @@ import StarRating from './StarRating';
 import AddWorkModal from './AddWorkModal';
 import ConfirmModal from './ConfirmModal';
 import WorkspaceBar from './WorkspaceBar';
-import { generateId, saveWork, archiveWork, getWorkspaces } from '../storage';
+import { generateId, saveWork, archiveWork } from '../storage';
 import { awardFinishPoints } from '../points';
 
-// MD3 motion
 const EASING = {
   emphasizedDecel: 'cubic-bezier(0.05, 0.7, 0.1, 1.0)',
   emphasized:      'cubic-bezier(0.2, 0, 0, 1)',
 };
 
-// ── Drag overlay — the floating ghost card ────────────────────────
+// Due date helpers
+function getDueStatus(dueDate) {
+  if (!dueDate) return null;
+  const now  = Date.now();
+  const due  = new Date(dueDate).getTime();
+  const diff = due - now;
+  if (diff < 0)         return 'overdue';
+  if (diff < 86400000)  return 'today';
+  if (diff < 172800000) return 'tomorrow';
+  return 'upcoming';
+}
+
+function DueBadge({ dueDate }) {
+  const status = getDueStatus(dueDate);
+  if (!status) return null;
+  const cfg = {
+    overdue:  { label: 'Overdue',  bg: 'var(--md-error-cont)',                          color: 'var(--md-on-error-cont)' },
+    today:    { label: 'Today',    bg: 'color-mix(in srgb, var(--md-star) 22%, var(--md-surface-2))',  color: 'var(--md-star)' },
+    tomorrow: { label: 'Tomorrow', bg: 'color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-2))', color: 'var(--md-primary)' },
+    upcoming: { label: new Date(dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }), bg: 'var(--md-surface-3)', color: 'var(--md-outline)' },
+  }[status];
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 600, padding: '2px 7px',
+      borderRadius: 'var(--md-shape-full)',
+      background: cfg.bg, color: cfg.color,
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+      flexShrink: 0,
+    }}>
+      <Calendar size={9} /> {cfg.label}
+    </span>
+  );
+}
+
+// Drag ghost
 function DragGhost({ work }) {
   if (!work) return null;
   return (
     <div style={{
-      width: 260,
-      background: 'var(--md-surface-2)',
-      borderRadius: 'var(--md-shape-lg)',
-      padding: '14px 16px',
+      width: 260, background: 'var(--md-surface-2)',
+      borderRadius: 'var(--md-shape-lg)', padding: '14px 16px',
       border: '2px solid var(--md-primary)',
-      boxShadow: `
-        0 8px 24px rgba(0,0,0,0.35),
-        0 2px 8px rgba(0,0,0,0.2),
-        0 0 0 1px color-mix(in srgb, var(--md-primary) 40%, transparent)
-      `,
-      transform: 'rotate(2.5deg) scale(1.05)',
-      opacity: 0.95,
-      cursor: 'grabbing',
-      pointerEvents: 'none',
-      // Entrance animation for the ghost
+      boxShadow: '0 8px 24px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.2)',
+      transform: 'rotate(2.5deg) scale(1.05)', opacity: 0.95,
+      cursor: 'grabbing', pointerEvents: 'none',
       animation: `ghost-lift 200ms ${EASING.emphasizedDecel} forwards`,
     }}>
-      <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8, color: 'var(--md-on-surface)' }}>
-        {work.title}
-      </div>
+      <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8 }}>{work.title}</div>
       <StarRating value={work.stars} onChange={() => {}} readonly />
-      <div style={{
-        marginTop: 10, fontSize: 11, color: 'var(--md-primary)',
-        fontWeight: 600, letterSpacing: '0.3px',
-      }}>
-        ↑ Drop on a workspace tab
+      <div style={{ marginTop: 8, fontSize: 11, color: 'var(--md-primary)', fontWeight: 600 }}>
+        ↑ Drop on workspace tab
       </div>
     </div>
   );
 }
 
-// ── Draggable card ────────────────────────────────────────────────
-function DraggableCard({ work, onOpen, onFinish, onEdit, onDelete, isDragging }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging: thisDragging } = useDraggable({ id: work.id });
-
-  const activeCount = (work.todos || []).length;
+// Draggable card
+function DraggableCard({ work, onOpen, onFinish, onEdit, onDelete, isDragging: thisIsDragging }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: work.id });
+  const activeCount = (work.todos  || []).length;
   const doneCount   = (work.history || []).length;
+  const dueStatus   = getDueStatus(work.dueDate);
 
-  // MD3: card shrinks and fades on pickup — emphasized accelerate out
   const cardStyle = {
-    transform: thisDragging
-      ? 'scale(0.94) translateY(2px)'
-      : CSS.Translate.toString(transform) || undefined,
-    opacity: thisDragging ? 0.45 : 1,
-    filter: thisDragging ? 'blur(0.5px)' : 'none',
-    transition: thisDragging
-      ? `transform 200ms ${EASING.emphasized}, opacity 180ms ${EASING.emphasized}, filter 180ms ${EASING.emphasized}`
-      : `transform 250ms ${EASING.emphasizedDecel}, opacity 200ms ${EASING.emphasizedDecel}, filter 200ms ${EASING.emphasizedDecel}`,
-    cursor: thisDragging ? 'grabbing' : 'grab',
-    willChange: 'transform, opacity',
-    outline: thisDragging ? `2px dashed color-mix(in srgb, var(--md-primary) 50%, transparent)` : 'none',
+    transform: isDragging ? 'scale(0.94) translateY(2px)' : CSS.Translate.toString(transform) || undefined,
+    opacity:   isDragging ? 0.45 : 1,
+    filter:    isDragging ? 'blur(0.5px)' : 'none',
+    transition: isDragging
+      ? `transform 200ms ${EASING.emphasized}, opacity 180ms ${EASING.emphasized}`
+      : `transform 250ms ${EASING.emphasizedDecel}, opacity 200ms ${EASING.emphasizedDecel}`,
+    cursor:      isDragging ? 'grabbing' : 'grab',
+    willChange:  'transform, opacity',
+    outline:     isDragging ? `2px dashed color-mix(in srgb, var(--md-primary) 50%, transparent)` : 'none',
     outlineOffset: 4,
-    touchAction: 'none', // prevents browser scroll hijacking touch drag
-    userSelect: 'none',
+    touchAction: 'none',
+    userSelect:  'none',
+    borderLeft:  dueStatus === 'overdue' ? '3px solid var(--md-error)' : undefined,
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={cardStyle}
-      {...attributes}
-      {...listeners}
-      className="work-card"
-      data-stars={work.stars}
-      onClick={() => !thisDragging && onOpen(work)}
+    <div ref={setNodeRef} style={cardStyle} {...attributes} {...listeners}
+      className="work-card" data-stars={work.stars}
+      onClick={() => !isDragging && onOpen(work)}
     >
       <div className="work-card-header">
         <div className="work-card-title">{work.title}</div>
         <div className="work-card-actions">
-          <button
-            className="btn-icon"
-            style={{ color: 'var(--md-success)', width: 32, height: 32 }}
+          <button className="btn-icon" style={{ color: 'var(--md-success)', width: 32, height: 32 }}
             onPointerDown={e => e.stopPropagation()}
-            onClick={e => { e.stopPropagation(); onFinish(work); }}
-            title="Mark as finished"
-          >
+            onClick={e => { e.stopPropagation(); onFinish(work); }} title="Mark finished">
             <CheckCircle2 size={14} />
           </button>
-          <button
-            className="btn-icon"
-            style={{ width: 32, height: 32 }}
+          <button className="btn-icon" style={{ width: 32, height: 32 }}
             onPointerDown={e => e.stopPropagation()}
-            onClick={e => { e.stopPropagation(); onEdit(work); }}
-            title="Edit"
-          >
+            onClick={e => { e.stopPropagation(); onEdit(work); }} title="Edit">
             <Pencil size={13} />
           </button>
-          <button
-            className="btn-icon"
-            style={{ color: 'var(--md-error)', width: 32, height: 32 }}
+          <button className="btn-icon" style={{ color: 'var(--md-error)', width: 32, height: 32 }}
             onPointerDown={e => e.stopPropagation()}
-            onClick={e => { e.stopPropagation(); onDelete(work); }}
-            title="Delete"
-          >
+            onClick={e => { e.stopPropagation(); onDelete(work); }} title="Delete">
             <Trash2 size={13} />
           </button>
         </div>
       </div>
+
       <StarRating value={work.stars} onChange={() => {}} readonly />
-      <div className="work-card-footer">
-        <span className="work-progress">{activeCount} active · {doneCount} done</span>
-        <ChevronRight size={14} style={{ color: 'var(--md-outline)' }} />
+
+      {/* Description */}
+      {work.desc && (
+        <div style={{ fontSize: 12, color: 'var(--md-outline)', marginTop: 7, lineHeight: 1.4,
+          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+          {work.desc}
+        </div>
+      )}
+
+      <div className="work-card-footer" style={{ marginTop: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span className="work-progress">{activeCount} active · {doneCount} done</span>
+          {work.dueDate && <DueBadge dueDate={work.dueDate} />}
+        </div>
+        <ChevronRight size={14} style={{ color: 'var(--md-outline)', flexShrink: 0 }} />
       </div>
     </div>
   );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────
-export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
-  const [showModal, setShowModal]       = useState(false);
+// Main Dashboard
+export default function Dashboard({
+  works, setWorks, uid, onOpenWork,
+  workspaces, setWorkspaces, activeWsId, setActiveWsId,
+  showAddWork, setShowAddWork,
+}) {
   const [editWork, setEditWork]         = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [finishTarget, setFinishTarget] = useState(null);
-  const [workspaces, setWorkspaces]     = useState([]);
-  const [activeWsId, setActiveWsId]     = useState('general');
   const [draggingWork, setDraggingWork] = useState(null);
   const [dropSuccess, setDropSuccess]   = useState(null);
 
-  useEffect(() => { getWorkspaces(uid).then(setWorkspaces); }, [uid]);
-
-  const allWs = [{ id: 'general', name: 'General' }, ...workspaces];
+  const allWs   = [{ id: 'general', name: 'General' }, ...(workspaces || [])];
   const filtered = works
     .filter(w => (w.workspaceId || 'general') === activeWsId)
-    .sort((a, b) => b.stars - a.stars);
+    .sort((a, b) => {
+      // Sort: overdue first, then by due date, then by stars
+      const as = getDueStatus(a.dueDate);
+      const bs = getDueStatus(b.dueDate);
+      if (as === 'overdue' && bs !== 'overdue') return -1;
+      if (bs === 'overdue' && as !== 'overdue') return 1;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+      if (a.dueDate && !b.dueDate) return -1;
+      if (!a.dueDate && b.dueDate) return 1;
+      return b.stars - a.stars;
+    });
 
-  // Touch-friendly sensors
-  // PointerSensor handles mouse. TouchSensor with no delay handles touch —
-  // tolerance:10 allows small finger movement without cancelling drag
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 150, tolerance: 10 },
-    }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 10 } }),
   );
 
-  // Custom collision: try pointerWithin first (accurate for mouse),
-  // fall back to closestCenter (better for touch where pointer coords differ)
   function collisionDetection(args) {
-    const pointer = pointerWithin(args);
-    if (pointer.length > 0) return pointer;
-    return closestCenter(args);
+    const ptr = pointerWithin(args);
+    return ptr.length > 0 ? ptr : closestCenter(args);
   }
 
   function handleDragStart({ active }) {
-    const work = works.find(w => w.id === active.id);
-    setDraggingWork(work || null);
+    setDraggingWork(works.find(w => w.id === active.id) || null);
   }
 
   async function handleDragEnd({ active, over }) {
     setDraggingWork(null);
     if (!over) return;
-
     const work = works.find(w => w.id === active.id);
-    if (!work) return;
-    const targetWsId = over.id;
-    if ((work.workspaceId || 'general') === targetWsId) return;
-
-    // Flash success on the target tab
-    setDropSuccess({ workId: active.id, wsId: targetWsId });
+    if (!work || (work.workspaceId || 'general') === over.id) return;
+    setDropSuccess({ workId: active.id, wsId: over.id });
     setTimeout(() => setDropSuccess(null), 700);
-
-    // Switch view to target workspace
-    setActiveWsId(targetWsId);
-
-    const updated = { ...work, workspaceId: targetWsId };
+    setActiveWsId(over.id);
+    const updated = { ...work, workspaceId: over.id };
     setWorks(works.map(w => w.id === active.id ? updated : w));
     await saveWork(uid, updated);
   }
 
-  async function handleAdd({ title, stars }) {
+  async function handleAdd({ title, stars, dueDate, desc }) {
     const work = {
       id: generateId(), title, stars,
+      dueDate: dueDate || null,
+      desc: desc || '',
       todos: [], history: [], note: '',
       workspaceId: activeWsId,
-      createdAt: Date.now(),
+      createdAt: Date.now(), updatedAt: Date.now(),
     };
     setWorks([...works, work]);
     await saveWork(uid, work);
-    setShowModal(false);
+    setShowAddWork(false);
   }
 
-  async function handleEdit({ title, stars }) {
-    const updated = { ...editWork, title, stars };
+  async function handleEdit({ title, stars, dueDate, desc }) {
+    const updated = { ...editWork, title, stars, dueDate: dueDate || null, desc: desc || '', updatedAt: Date.now() };
     setWorks(works.map(w => w.id === editWork.id ? updated : w));
     await saveWork(uid, updated);
     setEditWork(null);
@@ -231,16 +238,17 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
     <>
       <style>{`
         @keyframes ghost-lift {
-          from { transform: rotate(0deg) scale(1);    opacity: 0.7; }
+          from { transform: rotate(0deg) scale(1); opacity: 0.7; }
           to   { transform: rotate(2.5deg) scale(1.05); opacity: 0.95; }
         }
       `}</style>
 
-      <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <DndContext sensors={sensors} collisionDetection={collisionDetection}
+        onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
 
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <WorkspaceBar
-            workspaces={workspaces}
+            workspaces={workspaces || []}
             setWorkspaces={setWorkspaces}
             activeId={activeWsId}
             setActiveId={setActiveWsId}
@@ -263,13 +271,14 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
                   transition: `color 200ms ${EASING.emphasized}`,
                 }}>
                   {draggingWork
-                    ? '↑ Drag up to the workspace bar to move'
+                    ? '↑ Drag to a workspace tab to move'
                     : filtered.length === 0
                       ? 'No work items here yet'
-                      : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} · drag cards to workspace tabs to move`}
+                      : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} · overdue shown first`}
                 </div>
               </div>
-              <button className="btn btn-primary" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>
+              <button className="btn btn-primary" style={{ width: 'auto' }}
+                onClick={() => setShowAddWork(true)}>
                 <Plus size={16} /> Add Work
               </button>
             </div>
@@ -279,7 +288,7 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
                 <div className="empty-state">
                   <div className="empty-state-icon">📋</div>
                   <div className="empty-state-title">Nothing here yet</div>
-                  <div className="empty-state-sub">Add a work item, or drag one here from another workspace</div>
+                  <div className="empty-state-sub">Add a work item to get started</div>
                 </div>
               )}
 
@@ -295,44 +304,29 @@ export default function Dashboard({ works, setWorks, uid, onOpenWork }) {
                 />
               ))}
 
-              <button className="add-work-btn" onClick={() => setShowModal(true)}>
+              <button className="add-work-btn" onClick={() => setShowAddWork(true)}>
                 <Plus size={18} /> New Work Item
               </button>
             </div>
           </div>
         </div>
 
-        {/* Ghost card that follows the pointer */}
-        <DragOverlay
-          dropAnimation={{
-            duration: 280,
-            easing: EASING.emphasizedDecel,
-          }}
-        >
+        <DragOverlay dropAnimation={{ duration: 220, easing: EASING.emphasizedDecel }}>
           <DragGhost work={draggingWork} />
         </DragOverlay>
 
-        {showModal && <AddWorkModal onAdd={handleAdd} onClose={() => setShowModal(false)} />}
-        {editWork  && <AddWorkModal existing={editWork} onAdd={handleEdit} onClose={() => setEditWork(null)} />}
+        {showAddWork && <AddWorkModal onAdd={handleAdd} onClose={() => setShowAddWork(false)} />}
+        {editWork    && <AddWorkModal existing={editWork} onAdd={handleEdit} onClose={() => setEditWork(null)} />}
 
         {finishTarget && (
-          <ConfirmModal
-            title="Mark as finished?"
+          <ConfirmModal title="Mark as finished?" confirmLabel="Mark Finished ✓"
             message={`"${finishTarget.title}" will be moved to your profile history.`}
-            confirmLabel="Mark Finished ✓"
-            onConfirm={handleFinish}
-            onClose={() => setFinishTarget(null)}
-          />
+            onConfirm={handleFinish} onClose={() => setFinishTarget(null)} />
         )}
         {deleteTarget && (
-          <ConfirmModal
-            title="Delete this work?"
-            message={`"${deleteTarget.title}" will be removed. You can still see it in profile history.`}
-            confirmLabel="Delete"
-            danger
-            onConfirm={handleDelete}
-            onClose={() => setDeleteTarget(null)}
-          />
+          <ConfirmModal title="Delete this work?" confirmLabel="Delete" danger
+            message={`"${deleteTarget.title}" will be removed. Visible in profile history.`}
+            onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} />
         )}
       </DndContext>
     </>

@@ -130,7 +130,16 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
 
         {/* User avatar */}
         <div className="user-menu" ref={userRef}>
-          <button className="user-avatar" onClick={() => setUserOpen(o => !o)}>{initials}</button>
+          <button
+            className="user-avatar"
+            onClick={() => setUserOpen(o => !o)}
+            style={{ overflow: 'hidden', padding: 0 }}
+          >
+            {myPoints?.photoURL
+              ? <img src={myPoints.photoURL} alt={initials} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : initials
+            }
+          </button>
           {userOpen && (
             <div className="user-dropdown scale-in">
               <div className="user-info">

@@ -224,6 +224,7 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 
 /* ── LAYOUT ──────────────────────────────────────────────────── */
 .app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.app-body { flex: 1; display: flex; overflow: hidden; }
 
 /* ── TOP APP BAR (MD3) ───────────────────────────────────────── */
 .topbar {

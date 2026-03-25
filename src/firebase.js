@@ -11,6 +11,9 @@ import {
   collection, getDocs, onSnapshot,
   increment, updateDoc, query, orderBy, limit, where
 } from 'firebase/firestore';
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+} from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -24,6 +27,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export {
@@ -33,5 +37,6 @@ export {
   sendPasswordResetEmail,
   doc, setDoc, getDoc, deleteDoc,
   collection, getDocs, onSnapshot,
-  increment, updateDoc, query, orderBy, limit, where
+  increment, updateDoc, query, orderBy, limit, where,
+  ref, uploadBytes, getDownloadURL, deleteObject
 };
