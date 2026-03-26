@@ -100,7 +100,7 @@ function dueBadge(work) {
 }
 
 export default function Sidebar({
-  collapsed, onToggle,
+  collapsed, onToggle, mobileMenuOpen,
   works, workspaces, activeWsId, setActiveWsId,
   page, setPage, onOpenWork, onNewWork, onNewWorkspace,
 }) {
@@ -118,7 +118,7 @@ export default function Sidebar({
   const sidebarW = collapsed ? 56 : 220;
 
   return (
-    <div style={{
+    <div className={`app-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{
       width: sidebarW, minWidth: sidebarW, flexShrink: 0,
       background: 'var(--md-surface-1)',
       borderRight: '1px solid var(--md-outline-var)',

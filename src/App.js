@@ -18,6 +18,10 @@ import SettingsPage from './components/SettingsPage';
 import PomodoroTimer from './components/PomodoroTimer';
 import UpcomingPage from './components/UpcomingPage';
 import ExpenseTracker from './components/ExpenseTracker';
+<<<<<<< HEAD
+=======
+import BottomNav from './components/BottomNav';
+>>>>>>> 5ad34d6 (chore: mobile UI polish, expense tracker redesign, timer redesign, github-dark theme fix)
 
 const THEME_KEY  = 'gwd_theme';
 const GUEST_KEY  = 'gwd_guest';
@@ -50,11 +54,13 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem(SIDEBAR_KEY) === 'true'
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setThemeState]      = useState(() => localStorage.getItem(THEME_KEY) || 'github-dark');
 
   function setPage(p, extra = {}) {
     setPageState(p);
     saveNav({ page: p, ...extra });
+    setMobileMenuOpen(false);
   }
 
   useEffect(() => { applyTheme(theme); localStorage.setItem(THEME_KEY, theme); }, [theme]);
@@ -170,13 +176,19 @@ export default function App() {
         onOpenProfile={() => setPage('profile')}
         onOpenLeaderboard={() => setPage('leaderboard')}
         onOpenSettings={() => setPage('settings')}
+        onMenuToggle={() => setMobileMenuOpen(true)}
       />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Sidebar overlay for mobile */}
+        <div className={`sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)} />
+
         {/* Sidebar */}
         {showSidebar && (
           <Sidebar
             collapsed={sidebarCollapsed}
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
             onToggle={toggleSidebar}
             works={works}
             workspaces={workspaces}
@@ -185,7 +197,7 @@ export default function App() {
             page={page}
             setPage={setPage}
             onOpenWork={openWorkPage}
-            onNewWork={() => setShowAddWork(true)}
+            onNewWork={() => { setShowAddWork(true); setMobileMenuOpen(false); }}
             onNewWorkspace={() => {/* handled inside Dashboard/WorkspaceBar */}}
           />
         )}
@@ -230,6 +242,10 @@ export default function App() {
 
       {loggedIn && (
         <FriendsPanel user={user} isGuest={authState === 'guest'} myPoints={myPoints} onViewProfile={openPublicProfile} />
+      )}
+      
+      {showSidebar && (
+        <BottomNav page={page} setPage={setPage} onMenuToggle={() => setMobileMenuOpen(true)} />
       )}
     </div>
   );

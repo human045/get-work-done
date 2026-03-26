@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun, Settings } from 'lucide-react';
+import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun, Settings, Menu } from 'lucide-react';
 import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
-export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, onOpenSettings, myPoints, onHome }) {
+export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, onOpenSettings, myPoints, onHome, onMenuToggle }) {
   const [themeOpen, setThemeOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const themeRef = useRef(null);
@@ -41,6 +41,10 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
         </button>
       )}
 
+      <button className="btn-icon mobile-menu-btn" onClick={onMenuToggle} title="Menu" style={{ marginRight: 4 }}>
+        <Menu size={20} />
+      </button>
+
       <button
         onClick={onHome}
         style={{
@@ -64,23 +68,25 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
       <div className="topbar-actions">
         {/* Points pill */}
         {myPoints !== null && !isGuest && (
-          <button
-            onClick={onOpenLeaderboard}
-            title="View leaderboard"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'color-mix(in srgb, var(--md-tertiary) 16%, transparent)',
-              border: 'none', borderRadius: 'var(--md-shape-full)',
-              padding: '6px 14px', fontSize: 13, fontWeight: 600,
-              fontFamily: 'var(--md-mono)', color: 'var(--md-star)',
-              cursor: 'pointer', transition: 'background 0.2s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--md-tertiary) 24%, transparent)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--md-tertiary) 16%, transparent)'}
-          >
-            <Trophy size={12} />
-            {myPoints?.totalPoints ?? 0}
-          </button>
+          <span className="topbar-points-pill">
+            <button
+              onClick={onOpenLeaderboard}
+              title="View leaderboard"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'color-mix(in srgb, var(--md-tertiary) 16%, transparent)',
+                border: 'none', borderRadius: 'var(--md-shape-full)',
+                padding: '6px 14px', fontSize: 13, fontWeight: 600,
+                fontFamily: 'var(--md-mono)', color: 'var(--md-star)',
+                cursor: 'pointer', transition: 'background 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--md-tertiary) 24%, transparent)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'color-mix(in srgb, var(--md-tertiary) 16%, transparent)'}
+            >
+              <Trophy size={12} />
+              {myPoints?.totalPoints ?? 0}
+            </button>
+          </span>
         )}
 
         {isGuest && (
@@ -90,7 +96,7 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
         )}
 
         {/* Theme picker */}
-        <div className="theme-picker" ref={themeRef}>
+        <div className="theme-picker topbar-theme-btn" ref={themeRef}>
           <button className="btn-icon" onClick={() => setThemeOpen(o => !o)} title="Change theme">
             <Palette size={20} />
           </button>

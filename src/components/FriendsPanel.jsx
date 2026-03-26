@@ -104,6 +104,7 @@ export default function FriendsPanel({ user, isGuest, onViewProfile }) {
     <>
       {/* ── FAB ──────────────────────────────────────── */}
       <button
+        className="friends-fab"
         onClick={() => {
           if (openChat) { closeChat(); return; }
           setOpen(o => !o);
@@ -150,7 +151,7 @@ export default function FriendsPanel({ user, isGuest, onViewProfile }) {
       </button>
 
       {/* ── Friends Panel ─────────────────────────────── */}
-      <div style={{
+      <div className="friends-panel-container" style={{
         position: 'fixed', bottom: 92, right: 24,
         width: 320, height: 490,
         background: 'var(--md-surface-1)',

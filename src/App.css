@@ -141,18 +141,47 @@
   --md-success: #81c995; --md-star: #fcd34d;
 }
 
-/* 5. GitHub Dark */
+/* 5. GitHub Dark — matches github.com/dark exactly */
 [data-theme="github-dark"] {
-  --md-surface: #0d1117; --md-surface-1: #161b22; --md-surface-2: #21262d;
-  --md-surface-3: #30363d; --md-surface-variant: #30363d;
-  --md-on-surface: #e6edf3; --md-on-surface-var: #8b949e;
-  --md-outline: #6e7681; --md-outline-var: #30363d;
-  --md-primary: #58a6ff; --md-on-primary: #0d1117;
-  --md-primary-container: #1f6feb; --md-on-primary-cont: #cae8ff;
-  --md-secondary: #8b949e; --md-secondary-cont: #21262d;
-  --md-tertiary: #bc8cff; --md-tertiary-cont: #3d1f6b;
-  --md-error: #f85149; --md-error-cont: #490202; --md-on-error-cont: #ffd7d5;
-  --md-success: #3fb950; --md-star: #f0883e;
+  --md-surface:           #0d1117;
+  --md-surface-1:         #161b22;
+  --md-surface-2:         #21262d;
+  --md-surface-3:         #2d333b;
+  --md-surface-variant:   #30363d;
+
+  --md-on-surface:        #e6edf3;
+  --md-on-surface-var:    #adbac7;
+  --md-outline:           #768390;
+  --md-outline-var:       #30363d;
+
+  /* Blue link / primary action */
+  --md-primary:           #2f81f7;
+  --md-on-primary:        #ffffff;
+  --md-primary-container: #1f4b8e;
+  --md-on-primary-cont:   #cae8ff;
+
+  /* Secondary / muted */
+  --md-secondary:         #adbac7;
+  --md-secondary-cont:    #2d333b;
+
+  /* Diffstat purple */
+  --md-tertiary:          #bc8cff;
+  --md-tertiary-cont:     #271052;
+
+  /* Danger */
+  --md-error:             #f47067;
+  --md-error-cont:        #3c0014;
+  --md-on-error-cont:     #ffd7d5;
+
+  /* Status green, GitHub orange star */
+  --md-success:           #3fb950;
+  --md-star:              #d29922;
+
+  /* Slightly deeper elevations for dark feel */
+  --md-elev-1: 0 1px 0 rgba(0,0,0,.5);
+  --md-elev-2: 0 3px 6px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --md-elev-3: 0 8px 24px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+  --md-elev-4: 0 16px 32px rgba(0,0,0,.4), 0 4px 8px rgba(0,0,0,.3);
 }
 
 /* 6. Daylight (MD3 light — easy on eyes) */
@@ -1008,11 +1037,117 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   to   { opacity: 1; transform: translateX(0) scale(1); }
 }
 
+/* ── BOTTOM NAV (Mobile) ─────────────────────────────────────── */
+.bottom-nav { display: none; }
+
+
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+    background: color-mix(in srgb, var(--md-surface-1) 85%, transparent);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--md-outline-var); z-index: 900;
+    justify-content: space-around; align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; background: transparent; border: none; color: var(--md-outline);
+    font-family: var(--md-font); cursor: pointer; flex: 1; height: 100%;
+    transition: color 0.2s;
+  }
+  .bottom-nav-item.active { color: var(--md-primary); }
+  .bottom-nav-icon { transition: transform 0.2s cubic-bezier(0.2,0,0,1); }
+  .bottom-nav-item.active .bottom-nav-icon { transform: translateY(-2px); }
+  .bottom-nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.3px; }
+
+  /* Bottom spacing to prevent intersection with bottom nav */
+  .app-body, .pomodoro-page, .dashboard-container {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px) !important;
+  }
+
+  
+  /* Sidebar Off-canvas — slides in from the RIGHT */
+  .app-sidebar {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto !important;
+    height: 100vh;
+    width: 280px !important;
+    max-width: 85vw !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1) !important;
+    z-index: 1000 !important;
+    border-right: none !important;
+    border-left: 1px solid var(--md-outline-var) !important;
+    box-shadow: var(--md-elev-4);
+  }
+  .app-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  /* Friends FAB — float above bottom nav */
+  .friends-fab {
+    bottom: calc(env(safe-area-inset-bottom) + 84px) !important;
+  }
+  /* Friends panel — anchor above the FAB on mobile */
+  .friends-panel-container {
+    bottom: calc(env(safe-area-inset-bottom) + 152px) !important;
+  }
+  .sidebar-overlay {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Hamburger Menu Button */
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Structural Adjustments */
   .tasks-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--md-outline-var); }
   .work-page-body { flex-direction: column; }
   .dashboard { padding: 16px; }
   .works-grid { grid-template-columns: 1fr; }
   .topbar { height: 56px; }
+  
+  /* Cards & Modals */
+  .auth-card {
+    width: 90% !important;
+    max-width: 100%;
+    padding: 30px 24px;
+  }
+  .modal {
+    padding: 20px;
+    width: 92%;
+  }
+
+  /* Topbar Adjustments — slim topbar for mobile */
+  .topbar { padding: 0 10px 0 2px; gap: 2px; }
+  .topbar-logo { font-size: 17px; padding: 0 4px; }
+  .topbar-actions { gap: 2px; }
+
+  /* Hide low-priority topbar items on mobile — accessible via sidebar menu */
+  .topbar-points-pill { display: none !important; }
+  .topbar-theme-btn   { display: none !important; }
+}
+
+@media (min-width: 769px) {
+  .sidebar-overlay { display: none !important; }
+  .mobile-menu-btn { display: none !important; }
 }

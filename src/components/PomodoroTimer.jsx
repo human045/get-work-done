@@ -1,74 +1,50 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RotateCcw, Settings, Search } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings, Search, X, ChevronRight } from 'lucide-react';
 import { saveWork } from '../storage';
 import { awardTaskPoints } from '../points';
 import './PomodoroTimer.css';
 
 export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [mode, setMode] = useState('work'); // 'work' or 'break'
-  
-  const [workDuration, setWorkDuration] = useState(25); // minutes
-  const [breakDuration, setBreakDuration] = useState(5); // minutes
+  const [timeLeft, setTimeLeft]         = useState(25 * 60);
+  const [isRunning, setIsRunning]       = useState(false);
+  const [mode, setMode]                 = useState('work');
+  const [workDuration, setWorkDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
   const [showSettings, setShowSettings] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]   = useState('');
   const [selectedWorkId, setSelectedWorkId] = useState(null);
-  const [toast, setToast] = useState({ visible: false, pts: 0 });
+  const [toast, setToast]               = useState({ visible: false, pts: 0 });
 
-  const timerRef = useRef(null);
+  const timerRef   = useRef(null);
   const toastTimer = useRef(null);
 
-  // Sync timeLeft when durations change and timer is reset
+  const totalSeconds = mode === 'work' ? workDuration * 60 : breakDuration * 60;
+  const progress     = 1 - timeLeft / totalSeconds; // 0→1 fills left→right
+
   useEffect(() => {
-    if (!isRunning) {
-      setTimeLeft(mode === 'work' ? workDuration * 60 : breakDuration * 60);
-    }
-  }, [workDuration, breakDuration, mode, isRunning]);
+    if (!isRunning) setTimeLeft(totalSeconds);
+  }, [workDuration, breakDuration, mode]); // eslint-disable-line
 
   const handleComplete = useCallback(() => {
     setIsRunning(false);
     clearInterval(timerRef.current);
-    // Auto-switch mode or play sound can be added here
-    setMode(prevMode => prevMode === 'work' ? 'break' : 'work');
+    setMode(m => (m === 'work' ? 'break' : 'work'));
   }, []);
 
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            handleComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
+        setTimeLeft(p => { if (p <= 1) { handleComplete(); return 0; } return p - 1; });
       }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
+    } else clearInterval(timerRef.current);
     return () => clearInterval(timerRef.current);
   }, [isRunning, handleComplete]);
 
-  function toggleTimer() {
-    setIsRunning(!isRunning);
-  }
-
-  function resetTimer() {
-    setIsRunning(false);
-    setTimeLeft(mode === 'work' ? workDuration * 60 : breakDuration * 60);
-  }
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+  const formatTime = s => {
+    const m  = Math.floor(s / 60).toString().padStart(2, '0');
+    const sc = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sc}`;
   };
-
-  const filteredWorks = works.filter(w => w.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  const selectedWork = works.find(w => w.id === selectedWorkId);
-  const activeTodos = selectedWork?.todos || [];
 
   function showToast(pts) {
     setToast({ visible: true, pts });
@@ -76,149 +52,162 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
     toastTimer.current = setTimeout(() => setToast(t => ({ ...t, visible: false })), 1800);
   }
 
-  async function persist(updatedWork) {
-    onWorkUpdate(updatedWork);
-    if (uid) await saveWork(uid, updatedWork);
-  }
+  async function persist(w) { onWorkUpdate(w); if (uid) await saveWork(uid, w); }
 
   async function toggleTodo(id) {
     if (!selectedWork) return;
     const todo = activeTodos.find(t => t.id === id);
     if (!todo || todo.done) return;
-    const newTodos = activeTodos.filter(t => t.id !== id);
+    const newTodos   = activeTodos.filter(t => t.id !== id);
     const newHistory = [{ ...todo, done: true, completedAt: Date.now() }, ...(selectedWork.history || [])];
     await persist({ ...selectedWork, todos: newTodos, history: newHistory });
     if (uid) { await awardTaskPoints(uid); showToast(10); }
   }
 
+  const filteredWorks = works.filter(w =>
+    w.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const selectedWork = works.find(w => w.id === selectedWorkId);
+  const activeTodos  = selectedWork?.todos || [];
+
+  const progressPct = `${(progress * 100).toFixed(2)}%`;
+
   return (
     <div className="pomodoro-page fade-in">
       <div className="pomodoro-container">
-        {/* Timer Section */}
+
+        {/* ── Timer card ───────────────────────────── */}
         <div className="timer-section">
+
+          {/* Header */}
           <div className="timer-header">
-            <h2 className="dashboard-title">Pomodoro Timer</h2>
-            <button className="btn-icon" onClick={() => setShowSettings(!showSettings)}>
-              <Settings size={20} />
+            <div className="timer-mode-label">
+              {mode === 'work' ? 'Focus' : 'Break'}
+            </div>
+            <button
+              className="btn-icon"
+              onClick={() => setShowSettings(s => !s)}
+              style={showSettings ? { color: 'var(--md-primary)' } : {}}
+              title="Settings"
+            >
+              <Settings size={16} />
             </button>
           </div>
 
+          {/* Settings */}
           {showSettings && (
             <div className="timer-settings slide-in">
               <label className="settings-label">
-                Work Duration (min):
-                <input 
-                  type="number" 
-                  className="settings-input" 
-                  value={workDuration} 
-                  onChange={e => setWorkDuration(Math.max(1, Number(e.target.value)))} 
-                />
+                Focus (min)
+                <input type="number" className="settings-input" value={workDuration}
+                  onChange={e => setWorkDuration(Math.max(1, +e.target.value))} />
               </label>
               <label className="settings-label">
-                Break Duration (min):
-                <input 
-                  type="number" 
-                  className="settings-input" 
-                  value={breakDuration} 
-                  onChange={e => setBreakDuration(Math.max(1, Number(e.target.value)))} 
-                />
+                Break (min)
+                <input type="number" className="settings-input" value={breakDuration}
+                  onChange={e => setBreakDuration(Math.max(1, +e.target.value))} />
               </label>
             </div>
           )}
 
+          {/* Mode pills */}
           <div className="mode-selector">
-            <button 
-              className={`mode-btn ${mode === 'work' ? 'active' : ''}`}
-              onClick={() => { setMode('work'); setIsRunning(false); }}
-            >
-              Work
-            </button>
-            <button 
-              className={`mode-btn ${mode === 'break' ? 'active' : ''}`}
-              onClick={() => { setMode('break'); setIsRunning(false); }}
-            >
-              Break
-            </button>
+            {['work', 'break'].map(m => (
+              <button
+                key={m}
+                className={`mode-btn ${mode === m ? 'active' : ''}`}
+                onClick={() => { setMode(m); setIsRunning(false); }}
+              >
+                {m === 'work' ? 'Focus' : 'Break'}
+              </button>
+            ))}
           </div>
 
+          {/* Digits */}
           <div className="timer-display">
-            {formatTime(timeLeft)}
+            <span className={`timer-time ${isRunning ? 'running' : ''}`}>
+              {formatTime(timeLeft)}
+            </span>
           </div>
 
+          {/* Thin progress bar */}
+          <div className="timer-progress-track">
+            <div className="timer-progress-fill" style={{ width: progressPct }} />
+          </div>
+
+          {/* Controls */}
           <div className="timer-controls">
-            <button className="btn btn-primary control-btn" onClick={toggleTimer}>
-              {isRunning ? <Pause size={20} /> : <Play size={20} />}
+            <button className="timer-play-btn" onClick={() => setIsRunning(r => !r)}>
+              {isRunning ? <Pause size={20} /> : <Play size={20} style={{ marginLeft: 2 }} />}
               {isRunning ? 'Pause' : 'Start'}
             </button>
-            <button className="btn btn-outline control-btn" onClick={resetTimer}>
-              <RotateCcw size={20} /> Reset
+            <button className="timer-reset-btn" onClick={() => { setIsRunning(false); setTimeLeft(totalSeconds); }} title="Reset">
+              <RotateCcw size={16} />
             </button>
           </div>
         </div>
 
-        {/* Work Selection & Tasks Section */}
+        {/* ── Tasks panel ──────────────────────────── */}
         <div className="tasks-integration-section">
-          <div className="tasks-header">
-            <h3>Link a Work to this Session</h3>
-            <div className="search-box">
-              <Search size={16} className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Search works..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-            </div>
-          </div>
+          <p className="tasks-panel-title">Session Work</p>
 
           {!selectedWork ? (
-            <div className="works-list">
-              {filteredWorks.length === 0 ? (
-                <div className="no-works">No works found.</div>
-              ) : (
-                filteredWorks.map(w => (
-                  <button 
-                    key={w.id} 
-                    className="work-select-item"
-                    onClick={() => setSelectedWorkId(w.id)}
-                  >
-                    {w.title}
-                  </button>
-                ))
-              )}
-            </div>
+            <>
+              <div className="search-box">
+                <Search size={14} className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search works..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+              <div className="works-list">
+                {filteredWorks.length === 0
+                  ? <div className="no-works">No works found.</div>
+                  : filteredWorks.map(w => (
+                    <button key={w.id} className="work-select-item" onClick={() => setSelectedWorkId(w.id)}>
+                      <span>{w.title}</span>
+                      <ChevronRight size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
+                    </button>
+                  ))
+                }
+              </div>
+            </>
           ) : (
             <div className="selected-work-panel slide-in">
               <div className="selected-work-header">
                 <span className="selected-work-title">{selectedWork.title}</span>
-                <button className="btn-danger" onClick={() => setSelectedWorkId(null)}>Change</button>
+                <button
+                  className="btn-icon"
+                  style={{ color: 'var(--md-outline)', width: 26, height: 26 }}
+                  onClick={() => setSelectedWorkId(null)}
+                  title="Unlink"
+                >
+                  <X size={13} />
+                </button>
               </div>
-              
               <div className="pomodoro-tasks">
-                {activeTodos.length === 0 ? (
-                  <div className="no-tasks">No active tasks in this work. You can add them from the Work Page.</div>
-                ) : (
-                  activeTodos.map(todo => (
+                {activeTodos.length === 0
+                  ? <div className="no-tasks">No active tasks. Add them from the Work Page.</div>
+                  : activeTodos.map(todo => (
                     <div key={todo.id} className="todo-item slide-in">
-                      <button
-                        className="todo-check"
-                        onClick={() => toggleTodo(todo.id)}
-                        title="Complete (+10 pts)"
-                      />
+                      <button className="todo-check" onClick={() => toggleTodo(todo.id)} title="+10 pts" />
                       <span className="todo-text">{todo.text}</span>
                     </div>
                   ))
-                )}
+                }
               </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Toast */}
       <span className="points-toast" style={{
-        opacity: toast.visible ? 1 : 0,
-        transform: toast.visible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.9)',
+        opacity:   toast.visible ? 1 : 0,
+        transform: toast.visible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
       }}>
         +{toast.pts} pts ✓
       </span>
