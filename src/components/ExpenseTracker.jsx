@@ -24,7 +24,7 @@ function fmtDate(ts) {
 }
 
 // ─── BASE PRIMITIVES ──────────────────────────────────────────────────
-const E = { std: 'cubic-bezier(0.2,0,0,1)', decel: 'cubic-bezier(0.05,0.7,0.1,1)' };
+
 
 function FieldInput({ label, value, onChange, type = 'text', required }) {
   return (
