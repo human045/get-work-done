@@ -18,10 +18,7 @@ import SettingsPage from './components/SettingsPage';
 import PomodoroTimer from './components/PomodoroTimer';
 import UpcomingPage from './components/UpcomingPage';
 import ExpenseTracker from './components/ExpenseTracker';
-<<<<<<< HEAD
-=======
 import BottomNav from './components/BottomNav';
->>>>>>> 5ad34d6 (chore: mobile UI polish, expense tracker redesign, timer redesign, github-dark theme fix)
 
 const THEME_KEY  = 'gwd_theme';
 const GUEST_KEY  = 'gwd_guest';
