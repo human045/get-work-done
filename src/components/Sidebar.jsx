@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Home, Clock, ChevronDown,
   FolderOpen, Plus, PanelLeftClose, PanelLeftOpen,
-  Star, Calendar, Timer
+  Star, Calendar, Timer, Wallet
 } from 'lucide-react';
 
 const E = {
@@ -320,6 +320,7 @@ export default function Sidebar({
             {toolsOpen && (
               <div style={{ marginBottom: 4 }}>
                 <NavItem icon={<Timer size={13} />} label="Pomodoro" active={page === 'pomodoro'} onClick={() => setPage('pomodoro')} indent />
+                <NavItem icon={<Wallet size={13} />} label="Expense Tracker" active={page === 'expense-tracker'} onClick={() => setPage('expense-tracker')} indent />
               </div>
             )}
           </>
@@ -339,6 +340,18 @@ export default function Sidebar({
                 }}
               >
                 <Timer size={16} />
+              </button>
+             <button
+                onClick={() => setPage('expense-tracker')}
+                title="Expense Tracker"
+                style={{
+                  background: page === 'expense-tracker' ? 'color-mix(in srgb, var(--md-primary) 16%, transparent)' : 'none',
+                  border: 'none', cursor: 'pointer',
+                  color: page === 'expense-tracker' ? 'var(--md-primary)' : 'var(--md-outline)',
+                  padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex',
+                }}
+              >
+                <Wallet size={16} />
               </button>
           </div>
         )}

@@ -17,6 +17,7 @@ import FriendsPanel from './components/FriendsPanel';
 import SettingsPage from './components/SettingsPage';
 import PomodoroTimer from './components/PomodoroTimer';
 import UpcomingPage from './components/UpcomingPage';
+import ExpenseTracker from './components/ExpenseTracker';
 
 const THEME_KEY  = 'gwd_theme';
 const GUEST_KEY  = 'gwd_guest';
@@ -205,6 +206,8 @@ export default function App() {
             <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.displayName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
           ) : page === 'pomodoro' ? (
             <PomodoroTimer works={works} onWorkUpdate={handleWorkUpdate} uid={uid} />
+          ) : page === 'expense-tracker' ? (
+            <ExpenseTracker uid={uid} user={user} isGuest={authState === 'guest'} />
           ) : page === 'upcoming' ? (
             <UpcomingPage works={works} onOpenWork={openWorkPage} workspaces={workspaces} />
           ) : (
