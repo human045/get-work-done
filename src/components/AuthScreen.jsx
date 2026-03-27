@@ -1,60 +1,59 @@
-import { useState } from 'react';
 import posthog from 'posthog-js';
 import { SignIn, SignUp, Show } from '@clerk/react';
 
 export default function AuthScreen({ onGuest, isLoaded, clerkTimedOut }) {
-  const [mode, setMode] = useState('signin'); // signin | signup
-
   const clerkAppearance = {
     elements: {
       card: {
         background: 'transparent',
         boxShadow: 'none',
         border: 'none',
+        padding: '0 8px',
       },
-      headerTitle: { color: 'var(--md-text)' },
-      headerSubtitle: { color: 'var(--md-outline)' },
-      socialButtonsBlockButtonText: { color: 'var(--md-text)' },
+      headerTitle: { color: 'var(--md-text)', fontSize: '22px' },
+      headerSubtitle: { color: 'var(--md-outline)', fontSize: '14px' },
       socialButtonsBlockButton: {
-        background: 'var(--md-surface-variant)',
+        background: 'rgba(255, 255, 255, 0.05)',
         border: '1px solid var(--md-outline-variant)',
-        '&:hover': { background: 'var(--md-surface-variant-hover)' },
+        '&:hover': { background: 'rgba(255, 255, 255, 0.08)' },
       },
-      dividerText: { color: 'var(--md-outline)' },
+      socialButtonsBlockButtonText: { color: 'var(--md-text)', fontWeight: 500 },
       dividerLine: { background: 'var(--md-outline-variant)' },
-      formFieldLabel: { color: 'var(--md-text)' },
+      dividerText: { color: 'var(--md-outline)' },
+      formFieldLabel: { color: 'var(--md-text)', fontWeight: 500 },
       formFieldInput: {
-        background: 'rgba(255, 255, 255, 0.03)',
+        background: 'rgba(0, 0, 0, 0.2)',
         border: '1px solid var(--md-outline-variant)',
         color: 'var(--md-text)',
-        '&:focus': { borderColor: 'var(--md-primary)' },
+        borderRadius: '8px',
+        '&:focus': { borderColor: 'var(--md-primary)', boxShadow: '0 0 0 1px var(--md-primary)' },
       },
       formButtonPrimary: {
         backgroundColor: 'var(--md-primary)',
         color: 'var(--md-on-primary)',
+        borderRadius: '8px',
+        textTransform: 'none',
+        fontSize: '15px',
         '&:hover': { backgroundColor: 'var(--md-primary-hover)' },
       },
+      footer: { background: 'transparent' },
       footerActionText: { color: 'var(--md-outline)' },
-      footerActionLink: { color: 'var(--md-primary)' },
+      footerActionLink: { color: 'var(--md-primary)', fontWeight: 600 },
       identityPreviewText: { color: 'var(--md-text)' },
-      identityPreviewEditButtonIcon: { color: 'var(--md-primary)' },
       formResendCodeLink: { color: 'var(--md-primary)' },
     },
   };
 
   return (
     <div className="auth-screen">
-      <div className="auth-card scale-in" style={{ padding: '0px 12px 24px 12px' }}>
+      <div className="auth-card scale-in" style={{ padding: '24px 12px', minWidth: '400px' }}>
         {!isLoaded ? (
-          <div style={{ padding: '40px 0', textAlign: 'center' }}>
+          <div style={{ padding: '60px 0', textAlign: 'center' }}>
             <div className="auth-title">Welcome back</div>
-            <div className="auth-sub">Initializing...</div>
             {clerkTimedOut ? (
               <div style={{ color: 'var(--error)', fontSize: 13, lineHeight: 1.5, marginTop: 16 }}>
                 <p>⚠️ Auth Provider failed to load.</p>
-                <p style={{ marginTop: 8, opacity: 0.8 }}>
-                  Check your Internet or Clerk Key.
-                </p>
+                <p style={{ marginTop: 8 }}>Try refreshing or check your connection.</p>
               </div>
             ) : (
               <div className="loading-spinner" style={{ margin: '20px auto' }} />
@@ -62,43 +61,27 @@ export default function AuthScreen({ onGuest, isLoaded, clerkTimedOut }) {
           </div>
         ) : (
           <Show when="signed-out">
-            <div style={{ transform: 'translateY(-10px)' }}>
-              {mode === 'signin' ? (
-                <SignIn 
-                  routing="hash"
-                  appearance={clerkAppearance}
-                  afterSignInUrl="/"
-                />
-              ) : (
-                <SignUp 
-                  routing="hash"
-                  appearance={clerkAppearance}
-                  afterSignUpUrl="/"
-                />
-              )}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '-20px' }}>
-              <div className="auth-toggle">
-                {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
-                <button 
-                  type="button" 
-                  onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                  style={{ marginLeft: 8, color: 'var(--md-primary)', fontWeight: 600 }}
-                >
-                  {mode === 'signin' ? 'Sign up' : 'Sign in'}
-                </button>
-              </div>
+            <div style={{ marginBottom: 12 }}>
+              <SignIn 
+                routing="hash"
+                signUpUrl="#/sign-up"
+                appearance={clerkAppearance}
+              />
             </div>
           </Show>
         )}
 
-        <div className="auth-divider">or</div>
+        <div className="auth-divider" style={{ margin: '12px 0' }}>or</div>
 
         <div style={{ padding: '0 32px' }}>
-          <button className="btn btn-outline" onClick={onGuest} type="button" style={{ width: '100%', justifyContent: 'center' }}>
+          <button 
+            className="btn btn-outline" 
+            onClick={onGuest} 
+            type="button" 
+            style={{ width: '100%', justifyContent: 'center', height: '42px' }}
+          >
             Continue as Guest
-            <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 4 }}>(local only)</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 6 }}>(local only)</span>
           </button>
         </div>
       </div>
