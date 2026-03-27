@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Best Pomodoro Timer — Get Work Done | Free Online Focus Timer</title>
+  <meta name="description" content="The best free Pomodoro timer online. Stay focused with customizable work and break intervals, session linking to your projects, and beautiful minimal design. No signup needed." />
+  <meta name="keywords" content="best pomodoro timer, pomodoro timer online, free pomodoro timer, focus timer, productivity timer" />
+  <link rel="canonical" href="https://work.gamersdc.in/best-pomodoro-timer" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://work.gamersdc.in/best-pomodoro-timer" />
+  <meta property="og:title" content="Best Pomodoro Timer — Get Work Done" />
+  <meta property="og:description" content="Free, beautiful, minimal Pomodoro timer. Link sessions to your projects, customise focus and break durations, and get more done every day." />
+  <meta property="og:image" content="https://work.gamersdc.in/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Best Pomodoro Timer — Get Work Done" />
+  <meta name="twitter:description" content="Free, beautiful, minimal Pomodoro timer linked to your projects." />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Get Work Done – Pomodoro Timer",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "Web",
+    "url": "https://work.gamersdc.in",
+    "description": "The best free Pomodoro timer online. Customisable focus and break intervals with project linking.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "320" }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --bg1: #161b22; --bg2: #21262d;
+      --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+      --primary: #2f81f7; --success: #3fb950; --font: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+    a { color: var(--primary); text-decoration: none; }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 5%; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(13,17,23,.9); backdrop-filter: blur(12px); z-index: 99; }
+    .nav-logo { font-weight: 800; font-size: 18px; color: var(--text); }
+    .nav-logo span { color: var(--primary); }
+    .nav-cta { background: var(--primary); color: #fff; padding: 9px 22px; border-radius: 999px; font-weight: 600; font-size: 14px; transition: filter .2s; }
+    .nav-cta:hover { filter: brightness(1.12); }
+
+    /* HERO */
+    .hero { text-align: center; padding: 96px 5% 80px; background: radial-gradient(ellipse at 50% -20%, rgba(47,129,247,.18) 0%, transparent 65%); }
+    .hero-badge { display: inline-block; background: rgba(47,129,247,.12); border: 1px solid rgba(47,129,247,.3); color: var(--primary); font-size: 13px; font-weight: 600; padding: 5px 14px; border-radius: 999px; margin-bottom: 24px; letter-spacing: .5px; }
+    .hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 em { color: var(--primary); font-style: normal; }
+    .hero p { font-size: 18px; color: var(--muted); max-width: 560px; margin: 0 auto 40px; }
+    .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: var(--primary); color: #fff; padding: 14px 32px; border-radius: 999px; font-weight: 700; font-size: 16px; transition: filter .2s, transform .15s; display: inline-block; }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .btn-ghost { border: 1px solid var(--border); color: var(--text); padding: 14px 28px; border-radius: 999px; font-weight: 600; font-size: 15px; transition: border-color .2s; display: inline-block; }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* TIMER PREVIEW */
+    .timer-preview { max-width: 340px; margin: 64px auto 0; background: var(--bg1); border: 1px solid var(--border); border-radius: 24px; padding: 32px 28px; text-align: center; }
+    .timer-preview .mode { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+    .timer-preview .pills { display: flex; gap: 6px; background: var(--bg2); padding: 4px; border-radius: 999px; margin-bottom: 32px; }
+    .timer-preview .pill { flex: 1; padding: 7px 0; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .timer-preview .pill.active { background: var(--primary); color: #fff; }
+    .timer-preview .digits { font-family: var(--mono); font-size: 80px; font-weight: 700; letter-spacing: -4px; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+    .timer-track { height: 3px; background: var(--bg2); border-radius: 99px; margin: 20px 0 28px; }
+    .timer-fill { height: 100%; width: 62%; background: var(--primary); border-radius: 99px; }
+    .timer-btns { display: flex; gap: 10px; }
+    .timer-play { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: 999px; height: 46px; font-size: 15px; font-weight: 700; font-family: var(--font); cursor: pointer; }
+    .timer-reset { width: 46px; height: 46px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); color: var(--muted); font-size: 18px; cursor: pointer; }
+
+    /* FEATURES */
+    .section { max-width: 1100px; margin: 0 auto; padding: 96px 5%; }
+    .section-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--primary); margin-bottom: 16px; }
+    .section h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+    .section > p { font-size: 17px; color: var(--muted); max-width: 560px; margin-bottom: 56px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .feature-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 16px; padding: 28px; transition: border-color .2s, transform .2s; }
+    .feature-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+    .feature-icon { font-size: 28px; margin-bottom: 14px; }
+    .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
+    .faq-item { background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; }
+    .faq-item h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .faq-item p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* CTA SECTION */
+    .cta-section { text-align: center; padding: 96px 5%; background: linear-gradient(135deg, rgba(47,129,247,.08), rgba(47,129,247,.02)); border-top: 1px solid var(--border); }
+    .cta-section h2 { font-size: clamp(28px, 4vw, 48px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+    .cta-section p { font-size: 17px; color: var(--muted); margin-bottom: 40px; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 32px 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+
+    @media(max-width:600px) {
+      .hero { padding: 64px 5% 48px; }
+      .hero h1 { letter-spacing: -.5px; }
+      nav { padding: 14px 5%; }
+      .timer-preview .digits { font-size: 64px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Get Work <span>Done</span></div>
+  <a href="/" class="nav-cta">Open App →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">⏱ #1 Free Pomodoro Timer</div>
+  <h1>The <em>Best Pomodoro Timer</em><br>for Deep Work</h1>
+  <p>Minimal, beautiful, and free. Stay laser-focused with customisable intervals, project linking, and a progress bar that keeps you accountable.</p>
+  <div class="hero-btns">
+    <a href="/" class="btn-primary">Start Focusing Now — Free</a>
+    <a href="#features" class="btn-ghost">See Features</a>
+  </div>
+
+  <!-- Static timer preview -->
+  <div class="timer-preview">
+    <div class="mode">FOCUS TIME</div>
+    <div class="pills">
+      <div class="pill active">Focus</div>
+      <div class="pill">Break</div>
+    </div>
+    <div class="digits">25:00</div>
+    <div class="timer-track"><div class="timer-fill"></div></div>
+    <div class="timer-btns">
+      <button class="timer-play" onclick="window.location='/'">▶ Start</button>
+      <button class="timer-reset">↺</button>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Features</div>
+  <h2>Everything a focused mind needs</h2>
+  <p>Built around the proven Pomodoro Technique — without the clutter and noise of other apps.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⏱</div>
+      <h3>Customisable Intervals</h3>
+      <p>Set your own focus duration (1–90 min) and break length. The timer adapts to your rhythm, not a rigid preset.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>Link Sessions to Projects</h3>
+      <p>Pin a work project to your session and tick off tasks directly inside the timer — earn 10 pts per completed task.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Progress Bar</h3>
+      <p>A thin progress line fills as time passes — subtle motivation that keeps your eyes on the screen, not the clock.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌙</div>
+      <h3>7 Beautiful Themes</h3>
+      <p>Choose from Purple Night, GitHub Dark, Ocean Blue, Forest Green and more. Your eyes will thank you for the late-night sessions.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>Mobile-First Design</h3>
+      <p>Perfectly optimised for one-handed use on any phone. The layout stacks cleanly on small screens.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🆓</div>
+      <h3>100% Free Forever</h3>
+      <p>No paywalls, no ads, no credit card. Sign in with Google and your data syncs across all your devices via Firestore.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="padding-top:0">
+  <div class="section-label">How It Works</div>
+  <h2>The Pomodoro Technique, perfected</h2>
+  <p>Francesco Cirillo's method in 3 simple steps — turbocharge it with project tracking.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">1️⃣</div>
+      <h3>Pick a Work</h3>
+      <p>Search and link one of your projects to the session. Your active tasks appear right inside the timer.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">2️⃣</div>
+      <h3>Focus for 25 Minutes</h3>
+      <p>Hit Start and eliminate all distractions. The progress bar fills in real-time — no peeking at the clock.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">3️⃣</div>
+      <h3>Take a Break, Repeat</h3>
+      <p>The timer auto-switches to Break mode. Rest guilt-free, then go again. Four rounds earns a long break.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" style="padding-top:0">
+  <div class="section-label">FAQ</div>
+  <h2>Common questions</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <h3>Is this Pomodoro timer really free?</h3>
+      <p>Yes — 100% free, forever. Sign in with Google and your data syncs across devices. No hidden fees or premium tiers.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Can I change the Pomodoro duration?</h3>
+      <p>Absolutely. Tap the settings icon (⚙) inside the timer to set any focus and break duration in minutes. Changes apply instantly.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What makes this the best Pomodoro timer?</h3>
+      <p>Project linking, a point/gamification system, 7 themes, and a minimal interface that doesn't interrupt your flow. No ads, no upsells.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Does it work on mobile?</h3>
+      <p>Yes. The timer is fully responsive and designed for one-handed mobile use with bottom navigation and large tap targets.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Start your first Pomodoro — right now</h2>
+  <p>No download, no signup required to try. Your first session is one click away.</p>
+  <a href="/" class="btn-primary">Open Free Pomodoro Timer →</a>
+</section>
+
+<footer>
+  <span>© 2025 Get Work Done. Built for deep workers.</span>
+  <div style="display:flex;gap:20px">
+    <a href="/">App</a>
+    <a href="/best-productivity-app">Productivity App</a>
+    <a href="/expense-tracker-app">Expense Tracker</a>
+    <a href="/pomodoro-timer">Pomodoro Timer</a>
+  </div>
+</footer>
+
+</body>
+</html>
