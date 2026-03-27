@@ -12,10 +12,14 @@ posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
 
 const clerkKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
 
+if (!clerkKey) {
+  console.error('Clerk Publishable Key is missing! Please add REACT_APP_CLERK_PUBLISHABLE_KEY to your .env or Vercel environment variables.');
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/">
+    <ClerkProvider publishableKey={clerkKey || 'missing'} afterSignOutUrl="/">
       <App />
     </ClerkProvider>
   </React.StrictMode>

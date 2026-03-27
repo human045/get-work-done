@@ -247,7 +247,7 @@ export default function App() {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!loggedIn ? (
-            <AuthScreen onGuest={handleGuest} />
+            <AuthScreen onGuest={handleGuest} isLoaded={isLoaded} clerkTimedOut={clerkTimedOut} />
           ) : page === 'work' && openWork ? (
             <WorkPage key={openWork.id} work={openWork} uid={uid} myPoints={myPoints} onBack={goBack} onWorkUpdate={handleWorkUpdate} />
           ) : page === 'profile' ? (
