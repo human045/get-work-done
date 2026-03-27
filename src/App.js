@@ -273,7 +273,7 @@ export default function App() {
         <FriendsPanel user={user} isGuest={authState === 'guest'} myPoints={myPoints} onViewProfile={openPublicProfile} />
       )}
 
-      {showSidebar && (
+      {loggedIn && (
         <BottomNav page={page} setPage={setPage} onMenuToggle={() => setMobileMenuOpen(true)} />
       )}
     </div>

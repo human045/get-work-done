@@ -18,7 +18,7 @@ const EASING = {
 
 const DEFAULT_WS = { id: 'general', name: 'General', isDefault: true };
 
-function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, onDelete }) {
+function WsTab({ ws, count, isActive, isDragging, dropSuccess, onClick, onStartEdit, onDelete }) {
   const { isOver, setNodeRef } = useDroppable({ id: ws.id });
   const isSuccess = dropSuccess?.wsId === ws.id;
 
@@ -92,6 +92,7 @@ function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, on
                          background 200ms ${EASING.standard},
                          color 200ms ${EASING.standard}`,
             whiteSpace: 'nowrap',
+            minWidth: 0,
           }}
         >
           {ws.isDefault ? (
@@ -99,7 +100,39 @@ function WsTab({ ws, isActive, isDragging, dropSuccess, onClick, onStartEdit, on
           ) : (
             <span style={{ fontSize: isDragging ? 15 : 13, lineHeight: 1 }}>{ws.icon || '📁'}</span>
           )}
-          {ws.name}
+          <span
+            style={{
+              maxWidth: isDragging ? 124 : 116,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+            title={ws.name}
+          >
+            {ws.name}
+          </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 18,
+              height: 18,
+              padding: '0 6px',
+              borderRadius: 999,
+              background: isActive || isDropTarget
+                ? 'color-mix(in srgb, var(--md-primary) 20%, transparent)'
+                : 'color-mix(in srgb, var(--md-on-surface) 8%, transparent)',
+              color: isActive || isDropTarget ? 'var(--md-primary)' : 'var(--md-outline)',
+              fontSize: 11,
+              fontWeight: 700,
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
+            aria-label={`${count} works`}
+          >
+            {count}
+          </span>
           {isActive && !ws.isDefault && (
             <span style={{ display: 'flex', gap: 1, marginLeft: 2 }}>
               <button
@@ -194,6 +227,12 @@ export default function WorkspaceBar({
   }
 
   const displayWs = [DEFAULT_WS, ...workspaces];
+  const workspaceCounts = { general: 0 };
+  for (const ws of workspaces) workspaceCounts[ws.id] = 0;
+  for (const work of works) {
+    const id = work.workspaceId || 'general';
+    workspaceCounts[id] = (workspaceCounts[id] || 0) + 1;
+  }
 
   // Bar height expands during drag — MD3 emphasized decelerate
   const barHeight = isDragging ? 68 : 48;
@@ -294,6 +333,7 @@ export default function WorkspaceBar({
             <WsTab
               key={ws.id}
               ws={ws}
+              count={workspaceCounts[ws.id] ?? 0}
               isActive={activeId === ws.id}
               isDragging={isDragging}
               dropSuccess={dropSuccess}

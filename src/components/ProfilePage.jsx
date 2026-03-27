@@ -11,6 +11,14 @@ function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function getPlainNotePreview(note) {
+  return note
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .trim();
+}
+
 function StatCard({ value, label, color, onClick }) {
   return (
     <div
@@ -276,7 +284,7 @@ export default function ProfilePage({ user, isGuest, uid, myPoints }) {
                 </div>
                 {work.note?.trim() && (
                   <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
-                    "{work.note.trim().slice(0, 80)}{work.note.trim().length > 80 ? '…' : ''}"
+                    "{getPlainNotePreview(work.note).slice(0, 80)}{getPlainNotePreview(work.note).length > 80 ? '…' : ''}"
                   </div>
                 )}
               </div>

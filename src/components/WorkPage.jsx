@@ -1,11 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import posthog from 'posthog-js';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Maximize2, Minimize2, NotebookPen, Plus, Trash2 } from 'lucide-react';
 import StarRating from './StarRating';
 import { saveWork, generateId } from '../storage';
 import { awardTaskPoints } from '../points';
-
-
 
 function formatTime(ts) {
   const d = new Date(ts);
@@ -32,16 +30,152 @@ function PointsToast({ pts, visible }) {
   );
 }
 
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderInlineHtml(text) {
+  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+function noteToHtml(note) {
+  if (!note?.trim()) return '';
+
+  const lines = note.split('\n');
+  const html = [];
+  const stack = [];
+
+  const closeToDepth = (targetDepth) => {
+    while (stack.length > targetDepth) {
+      html.push(`</${stack.pop()}>`);
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/\t/g, '  ');
+    const match = line.match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+
+    if (!match) {
+      closeToDepth(0);
+      if (line.trim()) {
+        html.push(`<p>${renderInlineHtml(line)}</p>`);
+      } else {
+        html.push('<p><br></p>');
+      }
+      continue;
+    }
+
+    const depth = Math.floor(match[1].length / 2);
+    const nextTag = /\d+\./.test(match[2]) ? 'ol' : 'ul';
+    closeToDepth(depth);
+
+    while (stack.length < depth + 1) {
+      stack.push(nextTag);
+      html.push(`<${nextTag}>`);
+    }
+
+    if (stack[stack.length - 1] !== nextTag) {
+      html.push(`</${stack.pop()}>`);
+      stack.push(nextTag);
+      html.push(`<${nextTag}>`);
+    }
+
+    html.push(`<li>${renderInlineHtml(match[3] || '')}</li>`);
+  }
+
+  closeToDepth(0);
+  return html.join('');
+}
+
+function sanitizeNoteHtml(rawHtml) {
+  if (typeof document === 'undefined') return rawHtml;
+  const root = document.createElement('div');
+  root.innerHTML = rawHtml;
+  const allowed = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'STRONG', 'B']);
+
+  const walk = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) return;
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      node.remove();
+      return;
+    }
+
+    const tagName = node.tagName.toUpperCase();
+    if (tagName === 'DIV') {
+      const replacement = document.createElement('p');
+      while (node.firstChild) replacement.appendChild(node.firstChild);
+      node.replaceWith(replacement);
+      walk(replacement);
+      return;
+    }
+
+    if (!allowed.has(tagName)) {
+      const fragment = document.createDocumentFragment();
+      while (node.firstChild) fragment.appendChild(node.firstChild);
+      node.replaceWith(fragment);
+      return;
+    }
+
+    Array.from(node.attributes).forEach(attr => node.removeAttribute(attr.name));
+    Array.from(node.childNodes).forEach(walk);
+  };
+
+  Array.from(root.childNodes).forEach(walk);
+  return root.innerHTML;
+}
+
+function htmlToPlainText(html) {
+  if (typeof document === 'undefined') return '';
+  const root = document.createElement('div');
+  root.innerHTML = html;
+  return root.innerText.replace(/\n{3,}/g, '\n\n').trimEnd();
+}
+
+function getClosestBlock(editor) {
+  const selection = window.getSelection();
+  let node = selection?.anchorNode;
+  while (node && node !== editor) {
+    if (node.nodeType === Node.ELEMENT_NODE && ['P', 'DIV', 'LI'].includes(node.tagName)) {
+      return node;
+    }
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function isInsideList(editor) {
+  const selection = window.getSelection();
+  let node = selection?.anchorNode;
+  while (node && node !== editor) {
+    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'LI') return true;
+    node = node.parentNode;
+  }
+  return false;
+}
+
 export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onWorkUpdate }) {
   const [work, setWork] = useState(initialWork);
   const [todoInput, setTodoInput] = useState('');
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState({ visible: false, pts: 0 });
+  const [noteFocus, setNoteFocus] = useState(false);
+  const [boldActive, setBoldActive] = useState(false);
   const saveTimer = useRef(null);
   const toastTimer = useRef(null);
+  const noteRef = useRef(null);
+  const pageRef = useRef(null);
 
   const activeTodos = work.todos || [];
   const history = work.history || [];
+  const noteValue = work.note || '';
+  const noteHtmlValue = work.noteHtml || noteToHtml(noteValue);
+  const trimmedNote = noteValue.trim();
+  const wordCount = trimmedNote ? trimmedNote.split(/\s+/).length : 0;
+  const charCount = noteValue.length;
+  const lineCount = noteValue ? noteValue.split('\n').length : 1;
 
   const hasUpgrade = myPoints?.purchasedItems?.includes('todoUpgrade5');
   const MAX_TODOS = hasUpgrade ? 8 : 3;
@@ -61,11 +195,126 @@ export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onW
     saveTimer.current = setTimeout(() => setSaved(false), 2000);
   }, [uid, onWorkUpdate]);
 
-  function handleNote(e) {
-    const note = e.target.value;
+  useEffect(() => {
+    setWork(initialWork);
+    setSaved(false);
+    setBoldActive(false);
+    setNoteFocus(false);
+  }, [initialWork]);
+
+  useEffect(() => {
+    if (!noteRef.current) return;
+    if (noteRef.current.innerHTML !== noteHtmlValue) {
+      noteRef.current.innerHTML = noteHtmlValue;
+    }
+  }, [noteHtmlValue]);
+
+  useEffect(() => {
+    function syncBoldState() {
+      if (!noteRef.current) return;
+      const selection = window.getSelection();
+      const anchorNode = selection?.anchorNode;
+      const insideEditor = anchorNode && noteRef.current.contains(anchorNode);
+      setBoldActive(insideEditor ? document.queryCommandState('bold') : false);
+    }
+
+    document.addEventListener('selectionchange', syncBoldState);
+    return () => document.removeEventListener('selectionchange', syncBoldState);
+  }, []);
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement && noteFocus) {
+        setNoteFocus(false);
+      }
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [noteFocus]);
+
+  function persistEditorState(nextHtml) {
+    const sanitizedHtml = sanitizeNoteHtml(nextHtml);
+    const note = htmlToPlainText(sanitizedHtml);
     clearTimeout(saveTimer.current);
-    setWork(w => ({ ...w, note }));
-    saveTimer.current = setTimeout(() => persist({ ...work, note }), 800);
+    setSaved(false);
+    setWork(prev => ({ ...prev, note, noteHtml: sanitizedHtml }));
+    saveTimer.current = setTimeout(() => persist({ ...work, note, noteHtml: sanitizedHtml }), 800);
+  }
+
+  function handleNoteInput(e) {
+    persistEditorState(e.currentTarget.innerHTML);
+  }
+
+  function toggleBold() {
+    if (!noteRef.current) return;
+    noteRef.current.focus();
+    document.execCommand('bold');
+    persistEditorState(noteRef.current.innerHTML);
+    setBoldActive(document.queryCommandState('bold'));
+  }
+
+  function handleNoteKeyDown(e) {
+    if (!noteRef.current) return;
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleBold();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (isInsideList(noteRef.current)) {
+        document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+        persistEditorState(noteRef.current.innerHTML);
+      }
+      return;
+    }
+
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      const block = getClosestBlock(noteRef.current);
+      const text = block?.textContent?.trim() || '';
+      if (text === '-' || text === '*') {
+        e.preventDefault();
+        block.textContent = '';
+        document.execCommand('insertUnorderedList');
+        persistEditorState(noteRef.current.innerHTML);
+        return;
+      }
+      if (/^\d+\.$/.test(text)) {
+        e.preventDefault();
+        block.textContent = '';
+        document.execCommand('insertOrderedList');
+        persistEditorState(noteRef.current.innerHTML);
+      }
+    }
+  }
+
+  function handleNotePaste(e) {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+    persistEditorState(noteRef.current?.innerHTML || '');
+  }
+
+  async function toggleFocusMode() {
+    const nextFocus = !noteFocus;
+    setNoteFocus(nextFocus);
+
+    try {
+      if (nextFocus) {
+        if (window.innerWidth > 768 && pageRef.current && document.fullscreenElement !== pageRef.current) {
+          await pageRef.current.requestFullscreen();
+        }
+      } else if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // Fullscreen can be blocked by browser policy; keep the layout focus mode either way.
+    }
+
+    requestAnimationFrame(() => noteRef.current?.focus());
   }
 
   function addTodo() {
@@ -93,15 +342,14 @@ export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onW
   function handleStars(stars) { persist({ ...work, stars }); }
 
   return (
-    <div className="work-page fade-in">
+    <div ref={pageRef} className={`work-page fade-in ${noteFocus ? 'work-page-fullscreen' : ''}`}>
       <div className="work-page-header">
         <div className="work-page-title">{work.title}</div>
         <StarRating value={work.stars} onChange={handleStars} />
       </div>
 
-      <div className="work-page-body">
-        {/* ── Left: Tasks ── */}
-        <div className="tasks-panel">
+      <div className={`work-page-body ${noteFocus ? 'work-page-body-focus' : ''}`}>
+        <div className={`tasks-panel ${noteFocus ? 'tasks-panel-focus' : ''}`}>
           <div className="panel-section">
             <div className="panel-section-title">
               <span>Tasks</span>
@@ -159,7 +407,6 @@ export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onW
             )}
           </div>
 
-          {/* Completed history */}
           <div style={{ padding: '12px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className="panel-section-title" style={{ marginBottom: 0 }}>Completed</span>
             {history.length > 0 && (
@@ -181,22 +428,77 @@ export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onW
           </div>
         </div>
 
-        {/* ── Right: Notepad ── */}
-        <div className="notepad-panel">
+        <div className={`notepad-panel ${noteFocus ? 'notepad-panel-focus' : ''}`}>
           <div className="notepad-header">
-            <span>Notes</span>
-            {saved && (
-              <span className="notepad-saved">
-                <Check size={11} /> Saved
-              </span>
-            )}
+            <div className="notepad-heading">
+              <span className="notepad-kicker">Work notes</span>
+              <div className="notepad-title-row">
+                <span className="notepad-title">Notes</span>
+                {saved && (
+                  <span className="notepad-saved">
+                    <Check size={11} /> Saved
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              className="notepad-focus-btn"
+              type="button"
+              onClick={toggleFocusMode}
+              title={noteFocus ? 'Exit focus mode' : 'Enter focus mode'}
+            >
+              {noteFocus ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              <span>{noteFocus ? 'Normal' : 'Focus'}</span>
+            </button>
           </div>
-          <textarea
-            className="notepad-textarea"
-            placeholder="Write anything about this work — ideas, context, progress, blockers..."
-            value={work.note || ''}
-            onChange={handleNote}
-          />
+
+          <div className="notepad-toolbar">
+            <div className="notepad-tools">
+              <button
+                className={`notepad-tool-btn ${boldActive ? 'notepad-tool-btn-active' : ''}`}
+                type="button"
+                onClick={toggleBold}
+                title="Bold (Ctrl/Cmd+B)"
+              >
+                <strong>B</strong>
+                <span>Bold</span>
+              </button>
+            </div>
+            <div className="notepad-stats">
+              <span className="notepad-chip">{wordCount} words</span>
+              <span className="notepad-chip">{charCount} chars</span>
+              <span className="notepad-chip">{lineCount} lines</span>
+            </div>
+            <div className="notepad-toolbar-hint">
+              <NotebookPen size={13} />
+              <span>Autosaves inside this work</span>
+            </div>
+          </div>
+
+          <div className="notepad-sheet-wrap">
+            <div className="notepad-sheet-top">
+              <span className="notepad-sheet-label">{work.title}</span>
+              <span className="notepad-sheet-date">{formatTime(Date.now())}</span>
+            </div>
+            <div className="notepad-sheet">
+              <div className="notepad-margin" aria-hidden="true" />
+              <div
+                ref={noteRef}
+                className={`notepad-editor ${noteValue ? '' : 'notepad-editor-empty'}`}
+                contentEditable
+                suppressContentEditableWarning
+                data-placeholder="Write ideas, blockers, next steps, links, or rough plans here..."
+                onInput={handleNoteInput}
+                onKeyDown={handleNoteKeyDown}
+                onPaste={handleNotePaste}
+                onFocus={() => setBoldActive(document.queryCommandState('bold'))}
+                onKeyUp={() => setBoldActive(document.queryCommandState('bold'))}
+                onMouseUp={() => setBoldActive(document.queryCommandState('bold'))}
+                onBlur={() => setBoldActive(false)}
+                spellCheck="true"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
