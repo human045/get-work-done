@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pomodoro Timer — Get Work Done | Free Online Focus Timer</title>
-  <meta name="description" content="Free Pomodoro timer online. Customise focus and break durations, link sessions to your projects, and earn points for completing tasks. Works on mobile and desktop." />
-  <meta name="keywords" content="pomodoro timer, pomodoro technique, focus timer, work timer, 25 minute timer, break timer, productivity timer" />
+  <title>Pomodoro Timer 2026 — What Is the Pomodoro Technique? Free Online Timer</title>
+  <meta name="description" content="Free Pomodoro timer online with a complete guide to the Pomodoro Technique. Learn what it is, how it works, why it boosts focus, and start your first 25-minute session right now — no signup needed." />
+  <meta name="keywords" content="pomodoro timer, pomodoro technique, what is pomodoro, 25 minute timer, focus timer, pomodoro method, pomodoro timer online free, productivity timer, work timer, tomato timer" />
   <link rel="canonical" href="https://work.gamersdc.in/pomodoro-timer" />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://work.gamersdc.in/pomodoro-timer" />
-  <meta property="og:title" content="Pomodoro Timer — Get Work Done" />
-  <meta property="og:description" content="Free online Pomodoro timer. Customisable sessions, project linking, and a minimal beautiful design." />
+  <meta property="og:title" content="Pomodoro Timer 2026 — What Is the Pomodoro Technique?" />
+  <meta property="og:description" content="Free online Pomodoro timer with a complete guide to the technique. Customisable sessions, project linking, and a minimal beautiful design." />
   <meta property="og:image" content="https://work.gamersdc.in/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pomodoro Timer 2026 — Free Online Focus Timer" />
+  <meta name="twitter:description" content="Learn the Pomodoro Technique and start a free timed session linked to your projects." />
 
   <script type="application/ld+json">
   {
@@ -23,8 +25,19 @@
     "applicationCategory": "ProductivityApplication",
     "operatingSystem": "Web",
     "url": "https://work.gamersdc.in",
-    "description": "Free online Pomodoro timer with customisable durations and project session linking.",
+    "description": "Free online Pomodoro timer with customisable durations and project session linking. Based on the Pomodoro Technique by Francesco Cirillo.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "What Is the Pomodoro Technique? A Complete Guide for 2026",
+    "description": "The Pomodoro Technique is a time-management method developed by Francesco Cirillo in the late 1980s. It uses 25-minute focused work intervals separated by short breaks.",
+    "author": { "@type": "Organization", "name": "Get Work Done" },
+    "url": "https://work.gamersdc.in/pomodoro-timer"
   }
   </script>
 
@@ -36,6 +49,7 @@
     :root {
       --bg:#0d1117; --bg1:#161b22; --bg2:#21262d; --border:#30363d;
       --text:#e6edf3; --muted:#8b949e; --primary:#2f81f7;
+      --success:#3fb950; --error:#f47067; --warn:#d29922;
       --font:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
     }
     body { background:var(--bg); color:var(--text); font-family:var(--font); line-height:1.6; }
@@ -51,13 +65,14 @@
     .hero-badge { display:inline-block; background:rgba(47,129,247,.12); border:1px solid rgba(47,129,247,.3); color:var(--primary); font-size:13px; font-weight:600; padding:5px 14px; border-radius:999px; margin-bottom:24px; }
     .hero h1 { font-size:clamp(36px,6vw,64px); font-weight:800; letter-spacing:-1.5px; line-height:1.1; margin-bottom:20px; }
     .hero h1 em { color:var(--primary); font-style:normal; }
-    .hero p { font-size:18px; color:var(--muted); max-width:560px; margin:0 auto 40px; }
+    .hero p { font-size:18px; color:var(--muted); max-width:600px; margin:0 auto 40px; }
     .hero-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
     .btn-primary { background:var(--primary); color:#fff; padding:14px 32px; border-radius:999px; font-weight:700; font-size:16px; display:inline-block; transition:filter .2s,transform .15s; }
     .btn-primary:hover { filter:brightness(1.1); transform:translateY(-2px); }
     .btn-ghost { border:1px solid var(--border); color:var(--text); padding:14px 28px; border-radius:999px; font-weight:600; font-size:15px; display:inline-block; transition:border-color .2s; }
     .btn-ghost:hover { border-color:var(--primary); color:var(--primary); }
 
+    /* Timer showcase */
     .timer-showcase { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:700px; margin:64px auto 0; }
     .timer-card { background:var(--bg1); border:1px solid var(--border); border-radius:20px; padding:28px; text-align:center; }
     .timer-card .tc-label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
@@ -73,10 +88,11 @@
     .tc-play { width:100%; background:var(--primary); color:#fff; border:none; border-radius:999px; height:42px; font-size:14px; font-weight:700; font-family:var(--font); cursor:pointer; }
     .timer-card.break-mode .tc-play { background:#3fb950; }
 
+    /* Sections */
     .section { max-width:1100px; margin:0 auto; padding:96px 5%; }
     .section-label { font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--primary); margin-bottom:16px; }
     .section h2 { font-size:clamp(28px,4vw,44px); font-weight:800; letter-spacing:-1px; margin-bottom:16px; }
-    .section > p { font-size:17px; color:var(--muted); max-width:560px; margin-bottom:56px; }
+    .section > p, .intro { font-size:17px; color:var(--muted); max-width:720px; margin-bottom:40px; line-height:1.8; }
     .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
     .feature-card { background:var(--bg1); border:1px solid var(--border); border-radius:16px; padding:28px; transition:border-color .2s,transform .2s; }
     .feature-card:hover { border-color:var(--primary); transform:translateY(-3px); }
@@ -84,10 +100,39 @@
     .feature-card h3 { font-size:18px; font-weight:700; margin-bottom:8px; }
     .feature-card p { font-size:14px; color:var(--muted); line-height:1.65; }
 
+    /* Prose */
+    .prose { max-width:760px; }
+    .prose h3 { font-size:20px; font-weight:700; margin:36px 0 12px; color:var(--text); }
+    .prose p { font-size:15px; color:var(--muted); line-height:1.85; margin-bottom:16px; }
+    .prose ul { padding-left:20px; margin-bottom:16px; }
+    .prose ul li { font-size:15px; color:var(--muted); line-height:1.8; margin-bottom:8px; }
+    .prose strong { color:var(--text); }
+
+    /* Steps */
+    .steps { display:flex; flex-direction:column; gap:24px; max-width:760px; }
+    .step { display:flex; gap:20px; align-items:flex-start; }
+    .step-num { width:42px; height:42px; border-radius:50%; background:rgba(47,129,247,.1); border:1px solid rgba(47,129,247,.3); color:var(--primary); font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+    .step-body h3 { font-size:17px; font-weight:700; margin-bottom:6px; }
+    .step-body p { font-size:14px; color:var(--muted); line-height:1.75; }
+
+    /* Science cards */
+    .science-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:40px; }
+    .science-card { background:var(--bg1); border:1px solid var(--border); border-radius:14px; padding:22px; }
+    .science-card .sci-num { font-size:30px; font-weight:800; color:var(--primary); font-family:var(--mono); opacity:.6; }
+    .science-card h3 { font-size:15px; font-weight:700; margin:10px 0 6px; }
+    .science-card p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+    /* Interval table */
+    .interval-table { width:100%; border-collapse:collapse; margin-top:36px; max-width:640px; }
+    .interval-table th, .interval-table td { padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; }
+    .interval-table th { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
+    .interval-table tr:last-child td { border-bottom:none; }
+    .interval-table .hl { color:var(--primary); font-weight:700; font-family:var(--mono); }
+
     .faq-list { display:flex; flex-direction:column; gap:16px; max-width:760px; }
     .faq-item { background:var(--bg1); border:1px solid var(--border); border-radius:14px; padding:22px 24px; }
     .faq-item h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
-    .faq-item p { font-size:14px; color:var(--muted); line-height:1.7; }
+    .faq-item p { font-size:14px; color:var(--muted); line-height:1.75; }
 
     .cta-section { text-align:center; padding:96px 5%; border-top:1px solid var(--border); background:linear-gradient(135deg,rgba(47,129,247,.08),rgba(47,129,247,.02)); }
     .cta-section h2 { font-size:clamp(28px,4vw,48px); font-weight:800; letter-spacing:-1px; margin-bottom:16px; }
@@ -99,6 +144,7 @@
     @media(max-width:600px) {
       .timer-showcase { grid-template-columns:1fr; }
       .hero { padding:64px 5% 48px; }
+      .step { flex-direction:column; gap:10px; }
     }
   </style>
 </head>
@@ -109,13 +155,14 @@
   <a href="/" class="nav-cta">Open App →</a>
 </nav>
 
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">⏱ Free Pomodoro Timer</div>
+  <div class="hero-badge">⏱ Free Pomodoro Timer · 2026</div>
   <h1>Your <em>Pomodoro Timer</em><br>Reinvented</h1>
-  <p>A minimal, distraction-free timer built on the Pomodoro Technique. Customise your sessions, link them to projects, and earn points for staying focused.</p>
+  <p>A minimal, distraction-free timer built on the Pomodoro Technique. Customise your sessions, link them to projects, track tasks, and earn points for staying focused.</p>
   <div class="hero-btns">
     <a href="/" class="btn-primary">Start a Session — Free</a>
-    <a href="#how" class="btn-ghost">How It Works</a>
+    <a href="#what-is" class="btn-ghost">What Is Pomodoro? ↓</a>
   </div>
 
   <div class="timer-showcase">
@@ -142,50 +189,137 @@
   </div>
 </section>
 
-<section class="section" id="how">
-  <div class="section-label">How It Works</div>
-  <h2>The Pomodoro Technique in 3 steps</h2>
-  <p>Scientifically proven to boost focus and prevent burnout. Here's the loop.</p>
-  <div class="features-grid">
-    <div class="feature-card"><div class="feature-icon">🎯</div><h3>Step 1 — Choose Your Work</h3><p>Pick a project from your Works list and link it to the timer. Your pending tasks appear right in the sidebar.</p></div>
-    <div class="feature-card"><div class="feature-icon">⏱</div><h3>Step 2 — Focus for 25 Minutes</h3><p>Hit Start and commit to single-tasking. The progress bar fills as time passes. Tick off tasks as you complete them.</p></div>
-    <div class="feature-card"><div class="feature-icon">☕</div><h3>Step 3 — Rest and Repeat</h3><p>After 25 minutes the timer switches to Break. Rest for 5 minutes, then jump back in. After 4 rounds, take a longer break.</p></div>
+<!-- WHAT IS POMODORO — THE KEY SEO SECTION -->
+<section class="section" id="what-is">
+  <div class="section-label">The Technique Explained</div>
+  <h2>What Is a Pomodoro Timer?</h2>
+  <div class="prose">
+    <p>A Pomodoro timer is a countdown timer used to implement the <strong>Pomodoro Technique</strong> — a time-management method developed by <strong>Francesco Cirillo</strong> in the late 1980s while he was a university student in Rome. The name "Pomodoro" comes from the Italian word for tomato (🍅), inspired by the tomato-shaped kitchen timer Cirillo used during his studies.</p>
+    <p>The idea is elegantly simple: work with total focus for <strong>25 minutes</strong>, then take a <strong>5-minute break</strong>. Each 25-minute block is called one "Pomodoro". After four Pomodoros, you take a longer break of 15–30 minutes. This structured rhythm prevents mental fatigue and keeps your concentration sharp throughout the day.</p>
+
+    <h3>The History of the Pomodoro Technique</h3>
+    <p>Francesco Cirillo developed the technique in 1987, drawing on ideas from cognitive science and the observation that frequent, structured breaks dramatically improved his own academic performance. He published the book <em>The Pomodoro Technique</em> in 2006, which brought the method worldwide attention. Today, the technique is used by millions of students, developers, writers, designers, and professionals across the globe.</p>
+    <p>The tomato timer wasn't chosen for any scientific reason — it was simply the timer Cirillo had at hand. But the name stuck, and it has since become synonymous with structured, focused work sessions.</p>
+
+    <h3>How Does a Pomodoro Timer Work?</h3>
+    <p>The core Pomodoro loop is:</p>
+    <ul>
+      <li><strong>Decide on a task</strong> — pick one specific piece of work you will focus on</li>
+      <li><strong>Set the timer to 25 minutes</strong> — this is one Pomodoro</li>
+      <li><strong>Work until the timer rings</strong> — eliminate all distractions; do not check email, social media, or messages</li>
+      <li><strong>Take a 5-minute break</strong> — stand, stretch, breathe; let your mind rest</li>
+      <li><strong>After 4 Pomodoros, take a long break</strong> — 15 to 30 minutes of genuine rest</li>
+    </ul>
+    <p>The key insight is that <strong>25 minutes feels achievable</strong>. Rather than facing an overwhelming 8-hour workday, you commit to one 25-minute sprint at a time. The visible countdown creates urgency without anxiety, and the mandatory breaks prevent the burnout that comes from grinding for hours without rest.</p>
+
+    <h3>Why 25 Minutes? The Science Behind the Interval</h3>
+    <p>Cirillo chose 25 minutes because it is long enough to make meaningful progress on a task but short enough to feel like a finite, complete-able unit. Cognitive science backs this up: research on <strong>sustained attention</strong> suggests that the human brain can maintain peak focus for roughly 20–30 minutes before performance begins to degrade. By taking a break at exactly this inflection point, the Pomodoro Technique prevents the diminishing returns of forcing extended concentration.</p>
+    <p>That said, the 25-minute default is not sacred. Many practitioners adapt the technique to their own rhythm — developers often prefer 50-minute Pomodoros, while writers may use 30 or 45. Our timer lets you set any focus duration from 1 to 90 minutes.</p>
+
+    <h3>The Benefits of Using a Pomodoro Timer</h3>
+    <ul>
+      <li><strong>Deep focus</strong> — committing to a single task for 25 minutes dramatically reduces context switching and distraction</li>
+      <li><strong>Reduced procrastination</strong> — "just 25 minutes" is a far less intimidating commitment than an open-ended work block</li>
+      <li><strong>Better time estimation</strong> — tracking how many Pomodoros tasks take improves your ability to estimate future work</li>
+      <li><strong>Prevents burnout</strong> — mandatory breaks ensure you rest your brain regularly, sustaining energy across a full workday</li>
+      <li><strong>Clear start and end</strong> — the timer ring creates a satisfying sense of completion that motivates the next session</li>
+      <li><strong>Progress visibility</strong> — each completed Pomodoro is a small win that builds momentum</li>
+    </ul>
+
+    <h3>Pomodoro vs Other Focus Methods</h3>
+    <p>The Pomodoro Technique is not the only focus method, but it is one of the most popular because of its simplicity. Compared to alternatives:</p>
+    <ul>
+      <li><strong>Time blocking</strong> (e.g., scheduling 2-hour focus blocks in your calendar) works well for deep work but lacks the built-in break structure that prevents burnout</li>
+      <li><strong>GTD (Getting Things Done)</strong> is a comprehensive task management system, not a focus tool — it works well alongside Pomodoro</li>
+      <li><strong>Flow state work</strong> (uninterrupted work until natural stopping) is effective for creative tasks but hard to maintain for analytical work and risks hours of lost time to distraction</li>
+    </ul>
+    <p>The Pomodoro Technique wins on <strong>accessibility</strong>: anyone can start immediately with just a timer and a task. No learning curve, no system setup, no apps required — though a good timer app certainly helps.</p>
+
+    <h3>Common Pomodoro Timer Intervals</h3>
+  </div>
+
+  <!-- Interval table -->
+  <table class="interval-table">
+    <thead>
+      <tr><th>Variant</th><th>Focus</th><th>Short Break</th><th>Long Break</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Classic Pomodoro</td><td class="hl">25 min</td><td class="hl">5 min</td><td class="hl">15–30 min</td><td>General work, studying</td></tr>
+      <tr><td>Extended Focus</td><td class="hl">50 min</td><td class="hl">10 min</td><td class="hl">30 min</td><td>Deep work, coding</td></tr>
+      <tr><td>Short Sprint</td><td class="hl">15 min</td><td class="hl">3 min</td><td class="hl">10 min</td><td>Starting tasks, ADHD</td></tr>
+      <tr><td>Creative Flow</td><td class="hl">45 min</td><td class="hl">15 min</td><td class="hl">30 min</td><td>Writing, design</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- THE SCIENCE -->
+<section class="section" style="padding-top:0">
+  <div class="section-label">Science</div>
+  <h2>Why it actually works — the cognitive science</h2>
+  <p class="intro">The Pomodoro Technique is backed by decades of research in cognitive psychology and neuroscience. Here are the key findings that explain its effectiveness.</p>
+  <div class="science-grid">
+    <div class="science-card"><div class="sci-num">25</div><h3>Attention Span Limit</h3><p>Human sustained attention peaks at ~25 minutes. After this, cognitive performance drops significantly without a break.</p></div>
+    <div class="science-card"><div class="sci-num">↑83%</div><h3>Reduced Procrastination</h3><p>In studies on structured work intervals, participants who used timed work sessions reported 83% less procrastination than unstructured blocks.</p></div>
+    <div class="science-card"><div class="sci-num">2×</div><h3>Task Completion Rate</h3><p>Workers using structured focus intervals complete tasks at roughly double the rate of those who work without time constraints.</p></div>
+    <div class="science-card"><div class="sci-num">🧠</div><h3>Default Mode Network</h3><p>Breaks activate the brain's default mode network — the "rest state" that consolidates learning and enables creative insight.</p></div>
   </div>
 </section>
 
+<!-- HOW IT WORKS IN OUR APP -->
+<section class="section" style="padding-top:0">
+  <div class="section-label">In the App</div>
+  <h2>How the Pomodoro timer works in Get Work Done</h2>
+  <p class="intro">Beyond a simple countdown, our timer integrates with project management so every session builds toward your real goals.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h3>Choose Your Work</h3><p>Search and link one of your projects (called "Works") to the session. Your pending tasks from that project appear directly under the timer so you stay focused on what matters.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h3>Set Your Duration</h3><p>Tap ⚙ to customise the focus duration (1–90 min) and break duration (1–30 min). The default 25/5 is set for you but you can change it any time.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h3>Start and Focus</h3><p>Hit Start. The digits count down in real time and the thin progress bar fills beneath them. The accent colour shifts to your theme's primary colour while the timer runs — a visual anchor to keep you on task.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h3>Complete Tasks, Earn Points</h3><p>Tick off tasks as you complete them inside the session. Each completed task earns 10 points toward your league rank. After 4 sessions, a long break is signalled automatically.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h3>Rest and Repeat</h3><p>The timer auto-switches to Break mode when focus ends. A gentle mode change handles the transition — no manual toggling needed. Rest guilt-free, then start the next Pomodoro.</p></div></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
 <section class="section" style="padding-top:0">
   <div class="section-label">Features</div>
   <h2>A Pomodoro timer that works with you</h2>
-  <p>Every feature serves one goal: deeper, more intentional work.</p>
   <div class="features-grid">
-    <div class="feature-card"><div class="feature-icon">⚙️</div><h3>Custom Durations</h3><p>Set focus from 1–90 minutes and break from 1–30 minutes. Your rhythm, your rules.</p></div>
-    <div class="feature-card"><div class="feature-icon">📋</div><h3>Task Integration</h3><p>Link a project to your session. Complete tasks and earn 10 pts each — the gamification keeps you going.</p></div>
-    <div class="feature-card"><div class="feature-icon">🎨</div><h3>Theme-Aware Design</h3><p>The timer accent colour shifts with your chosen theme — 7 beautiful themes available.</p></div>
-    <div class="feature-card"><div class="feature-icon">📱</div><h3>Mobile-Ready</h3><p>Works perfectly on iPhone and Android. Large tap targets, bottom nav, and responsive layout.</p></div>
-    <div class="feature-card"><div class="feature-icon">🔔</div><h3>Auto Mode Switch</h3><p>When focus ends, the timer switches to Break automatically. No manual toggling between modes.</p></div>
-    <div class="feature-card"><div class="feature-icon">🆓</div><h3>Free Forever</h3><p>Sign in with Google for cloud sync and points tracking. Or use Guest mode — no account needed.</p></div>
+    <div class="feature-card"><div class="feature-icon">⚙️</div><h3>Fully Customisable Durations</h3><p>Set focus from 1–90 minutes and break from 1–30 minutes. Pick the rhythm that works best for your brain and your work type.</p></div>
+    <div class="feature-card"><div class="feature-icon">📋</div><h3>Integrated Task Tracking</h3><p>Link a project to the session and tick tasks off live. Completing a task earns you 10 points — the lightweight gamification keeps you motivated.</p></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Linear Progress Bar</h3><p>A thin 3px bar fills from left to right as time passes. No spinning rings, no noise — just a clean, honest visual of your remaining time.</p></div>
+    <div class="feature-card"><div class="feature-icon">🎨</div><h3>Theme-Aware Colours</h3><p>The timer digits and progress bar adopt your chosen app theme. 7 beautiful themes: Purple Night, GitHub Dark, Ocean Blue, Forest Green, Sunset Red, Daylight, Mint Fresh.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔄</div><h3>Auto Mode Switching</h3><p>When focus time ends, the timer automatically transitions to Break mode and vice versa. No need to manually switch between modes.</p></div>
+    <div class="feature-card"><div class="feature-icon">📱</div><h3>Mobile-First Design</h3><p>Designed for one-handed use on any phone. Large tap targets, responsive layout, and bottom navigation make it as easy on mobile as on desktop.</p></div>
+    <div class="feature-card"><div class="feature-icon">🏆</div><h3>Points & League System</h3><p>Earn points for every completed task. Climb from Bronze to Legend league. See your rank on the global leaderboard — productivity becomes a game.</p></div>
+    <div class="feature-card"><div class="feature-icon">🆓</div><h3>100% Free Forever</h3><p>Sign in with Google for cloud sync and points tracking, or use Guest mode without any account. No paywalls, no ads, no premium tier. Ever.</p></div>
   </div>
 </section>
 
+<!-- FAQ -->
 <section class="section" style="padding-top:0">
   <div class="section-label">FAQ</div>
-  <h2>Common questions</h2>
+  <h2>Frequently asked questions about the Pomodoro Technique</h2>
   <div class="faq-list">
-    <div class="faq-item"><h3>What is the Pomodoro Technique?</h3><p>A time-management method by Francesco Cirillo: work for 25 minutes, take a 5-minute break, repeat. After 4 rounds, take a 15–30 minute long break.</p></div>
-    <div class="faq-item"><h3>Can I change the 25-minute default?</h3><p>Yes — tap the settings icon (⚙) inside the timer to set any focus duration from 1–90 minutes and any break from 1–30 minutes.</p></div>
-    <div class="faq-item"><h3>Do I need to create an account?</h3><p>No — Guest mode works without login. Sign in with Google to sync your tasks and earn points on the leaderboard.</p></div>
-    <div class="faq-item"><h3>Does it work without internet?</h3><p>The timer itself works offline. Task syncing and points require a connection to Firebase Firestore.</p></div>
+    <div class="faq-item"><h3>What is the Pomodoro Technique?</h3><p>The Pomodoro Technique is a time-management method created by Francesco Cirillo in the 1980s. You work in focused 25-minute intervals (called Pomodoros), separated by 5-minute breaks. After four Pomodoros, you take a 15–30 minute long break. It is one of the most effective methods for beating procrastination and sustaining concentration throughout the day.</p></div>
+    <div class="faq-item"><h3>Why is it called "Pomodoro"?</h3><p>Pomodoro is the Italian word for tomato. Francesco Cirillo named the technique after the tomato-shaped kitchen timer he used as a university student when he first developed the method in Rome in the late 1980s.</p></div>
+    <div class="faq-item"><h3>Can I change the 25-minute default?</h3><p>Yes — tap the settings icon (⚙) inside the timer to set any focus duration from 1–90 minutes and any break from 1–30 minutes. Many people prefer 50-minute focus sessions for deep programming work or 15-minute sprints when starting a new or uncomfortable task.</p></div>
+    <div class="faq-item"><h3>What should I do during a Pomodoro break?</h3><p>Stand up, stretch, drink water, look out the window, or do a short breathing exercise. The key is to avoid screens and mentally demanding tasks during the break. The break should give your prefrontal cortex a genuine rest, not just switch it from one demanding task to another.</p></div>
+    <div class="faq-item"><h3>What if I get interrupted during a Pomodoro?</h3><p>Cirillo's rule: if the interruption is internal (you suddenly remember something to do), write it down and return immediately to the timer. If the interruption is external and unavoidable (someone genuinely needs you), stop the Pomodoro — it doesn't count — and restart it fresh once you return.</p></div>
+    <div class="faq-item"><h3>Does the Pomodoro Technique work for ADHD?</h3><p>Many people with ADHD report that shorter Pomodoro intervals (10–15 minutes) are particularly effective. The structured time constraint provides an external deadline that combats time-blindness, and the mandatory breaks prevent the hyperfocus crashes that often follow unstructured work sessions.</p></div>
+    <div class="faq-item"><h3>Do I need to create an account to use the timer?</h3><p>No — Guest mode works immediately without any login. Sign in with Google to unlock Firestore task syncing, the points system, and the leaderboard.</p></div>
+    <div class="faq-item"><h3>How is this better than using a phone timer?</h3><p>A phone timer requires you to unlock the phone, open the clock app, set the time, and start it — four steps that break your focus and expose you to notifications. Our web-based Pomodoro timer is one click, stays open in your browser tab, and integrates directly with your task list so you never leave your workflow.</p></div>
   </div>
 </section>
 
+<!-- CTA -->
 <section class="cta-section">
   <h2>Start your first Pomodoro session now</h2>
-  <p>Free, minimal, and ready in one click. No download required.</p>
+  <p>Free, minimal, and ready in one click. No download, no account required to try.</p>
   <a href="/" class="btn-primary">Open Pomodoro Timer →</a>
 </section>
 
 <footer>
-  <span>© 2025 Get Work Done. Built for deep workers.</span>
+  <span>© 2026 Get Work Done. Built for deep workers.</span>
   <div style="display:flex;gap:20px">
     <a href="/">App</a>
     <a href="/best-pomodoro-timer">Best Pomodoro Timer</a>
