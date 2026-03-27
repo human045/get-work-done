@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom/client';
 import posthog from 'posthog-js';
 import App from './App';
 
-posthog.init(process.env.REACT_APP_PUBLIC_POSTHOG_KEY, {
-  api_host: process.env.REACT_APP_PUBLIC_POSTHOG_HOST,
-  person_profiles: 'identified_only',
+posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
+  api_host: 'https://eu.i.posthog.com',
+  defaults: '2026-01-30',
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
