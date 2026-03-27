@@ -22,6 +22,7 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
         ? user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
         : user.email ? user.email[0].toUpperCase() : 'U')
     : 'G';
+  const avatarUrl = myPoints?.photoURL || user?.photoURL || null;
 
   async function handleSignOut() {
     setUserOpen(false);
@@ -139,8 +140,8 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
             onClick={() => setUserOpen(o => !o)}
             style={{ overflow: 'hidden', padding: 0 }}
           >
-            {myPoints?.photoURL
-              ? <img src={myPoints.photoURL} alt={initials} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            {avatarUrl
+              ? <img src={avatarUrl} alt={initials} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               : initials
             }
           </button>

@@ -123,7 +123,7 @@ export async function getPublicProfile(uid) {
 }
 
 // ── Profile editing ───────────────────────────────────────────────
-export async function updateProfile(uid, { displayName, username, avatarColor, status }) {
+export async function updateProfile(uid, { displayName, username, avatarColor, status, photoURL }) {
   if (!uid) return;
   const ref = doc(db, 'leaderboard', uid);
   const updates = { updatedAt: Date.now() };
@@ -131,6 +131,7 @@ export async function updateProfile(uid, { displayName, username, avatarColor, s
   if (username   !== undefined) updates.username    = username.trim().toLowerCase().slice(0, 20);
   if (avatarColor !== undefined) updates.avatarColor = avatarColor;
   if (status     !== undefined) updates.status      = status.trim().slice(0, 80);
+  if (photoURL !== undefined) updates.photoURL = photoURL || null;
   await updateDoc(ref, updates);
 }
 

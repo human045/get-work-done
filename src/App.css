@@ -856,6 +856,11 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   text-align: center;
 }
 
+.auth-form-stack {
+  display: grid;
+  gap: 0;
+}
+
 /* ── MD3 CARD ────────────────────────────────────────────────── */
 .work-card {
   background: color-mix(in srgb, var(--md-surface-1) 80%, transparent);
@@ -1359,31 +1364,79 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   /* Cards & Modals */
   .auth-screen {
     padding: 16px;
+    align-items: flex-start;
   }
   .auth-shell {
     grid-template-columns: 1fr;
     min-height: auto;
     gap: 16px;
+    width: 100%;
   }
   .auth-hero,
   .auth-panel {
     border-radius: 24px;
   }
   .auth-hero {
-    padding: 24px;
+    padding: 22px 20px;
   }
   .auth-hero-title {
     max-width: none;
-    font-size: clamp(32px, 10vw, 48px);
+    margin-top: 18px;
+    font-size: clamp(28px, 11vw, 42px);
+    line-height: 1;
   }
   .auth-feature-list {
-    margin-top: 24px;
+    margin-top: 18px;
+    gap: 10px;
+  }
+  .auth-feature-item {
+    padding: 12px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+  }
+  .auth-hero-copy {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.6;
   }
   .auth-panel {
-    padding: 20px;
+    padding: 18px 16px;
   }
   .auth-widget {
-    padding: 18px;
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+  .auth-title {
+    font-size: 26px;
+  }
+  .auth-panel-header {
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .auth-mode-switch {
+    border-radius: 14px;
+  }
+  .auth-mode-pill {
+    min-height: 38px;
+    font-size: 13px;
+  }
+  .auth-input,
+  .auth-social-button,
+  .auth-submit-button,
+  .auth-guest-button {
+    min-height: 46px;
+  }
+  .auth-divider {
+    margin: 18px 0 14px;
+    font-size: 12px;
+  }
+  .auth-guest-button {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+  .auth-guest-note {
+    font-size: 11px;
+    line-height: 1.5;
   }
   .modal {
     padding: 20px;
@@ -1412,5 +1465,48 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 
   .auth-hero {
     min-height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-screen {
+    padding: 10px;
+  }
+
+  .auth-shell {
+    gap: 12px;
+  }
+
+  .auth-hero {
+    padding: 18px 16px;
+  }
+
+  .auth-badge {
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+
+  .auth-hero-copy {
+    font-size: 13px;
+  }
+
+  .auth-feature-list {
+    display: none;
+  }
+
+  .auth-panel {
+    padding: 16px 12px;
+  }
+
+  .auth-widget {
+    padding: 14px 12px;
+  }
+
+  .auth-title {
+    font-size: 24px;
+  }
+
+  .auth-sub {
+    font-size: 13px;
   }
 }
