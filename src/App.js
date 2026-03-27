@@ -49,6 +49,7 @@ export default function App() {
 
   // ── Local state ─────────────────────────────────────────────────
   const [authState, setAuthState]   = useState('loading');
+  const [clerkTimedOut, setClerkTimedOut] = useState(false);
   const [works, setWorks]           = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [myPoints, setMyPoints]     = useState(null);
@@ -70,6 +71,16 @@ export default function App() {
   }
 
   useEffect(() => { applyTheme(theme); localStorage.setItem(THEME_KEY, theme); }, [theme]);
+
+  // Timeout fallback — if Clerk never loads (bad key/missing key), unblock the app
+  useEffect(() => {
+    if (isLoaded) return;
+    const t = setTimeout(() => {
+      setClerkTimedOut(true);
+      setAuthState('unauthed');
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [isLoaded]);
 
   // ── Auth effect — driven by Clerk ───────────────────────────────
   useEffect(() => {
@@ -171,7 +182,7 @@ export default function App() {
     });
   }
 
-  if (authState === 'loading' || !isLoaded) {
+  if ((authState === 'loading' || !isLoaded) && !clerkTimedOut) {
     return (
       <div className="app" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>

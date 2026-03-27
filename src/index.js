@@ -10,10 +10,12 @@ posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
   debug: true,
 });
 
+const clerkKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY;
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider afterSignOutUrl="/">
+    <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/">
       <App />
     </ClerkProvider>
   </React.StrictMode>
