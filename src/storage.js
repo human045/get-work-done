@@ -15,8 +15,8 @@ const MIGRATABLE_USER_COLLECTIONS = [
 function localGet() {
   try {
     const d = JSON.parse(localStorage.getItem(LOCAL_KEY));
-    return d || { works: [], deletedWorks: [], workspaces: [] };
-  } catch { return { works: [], deletedWorks: [], workspaces: [] }; }
+    return d || { works: [], deletedWorks: [], workspaces: [], notebooks: [], notebookPages: [] };
+  } catch { return { works: [], deletedWorks: [], workspaces: [], notebooks: [], notebookPages: [] }; }
 }
 function localSet(data) { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); }
 
@@ -157,6 +157,28 @@ async function cloudDeleteWorkspace(uid, wsId) {
   await deleteDoc(doc(db, 'users', uid, 'workspaces', wsId));
 }
 
+// ─── CLOUD NOTEBOOKS ──────────────────────────────────────────────
+async function cloudGetNotebooks(uid) {
+  const snap = await getDocs(collection(db, 'users', uid, 'notebooks'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function cloudSaveNotebook(uid, notebook) {
+  await setDoc(doc(db, 'users', uid, 'notebooks', notebook.id), notebook);
+}
+async function cloudDeleteNotebook(uid, notebookId) {
+  await deleteDoc(doc(db, 'users', uid, 'notebooks', notebookId));
+}
+async function cloudGetNotebookPages(uid, notebookId) {
+  const snap = await getDocs(collection(db, 'users', uid, 'notebooks', notebookId, 'pages'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function cloudSaveNotebookPage(uid, notebookId, page) {
+  await setDoc(doc(db, 'users', uid, 'notebooks', notebookId, 'pages', page.id), page);
+}
+async function cloudDeleteNotebookPage(uid, notebookId, pageId) {
+  await deleteDoc(doc(db, 'users', uid, 'notebooks', notebookId, 'pages', pageId));
+}
+
 // ─── UNIFIED API ──────────────────────────────────────────────────
 export async function getWorks(uid) {
   if (!uid) return localGet().works;
@@ -235,6 +257,90 @@ export async function deleteWorkspace(uid, wsId) {
     localSet(data);
   } else {
     await cloudDeleteWorkspace(uid, wsId);
+  }
+}
+
+// ─── NOTEBOOKS ────────────────────────────────────────────────────
+export async function getNotebooks(uid) {
+  if (!uid) return localGet().notebooks || [];
+  return await cloudGetNotebooks(uid);
+}
+
+export async function saveNotebook(uid, notebook) {
+  if (!uid) {
+    const data = localGet();
+    const idx = (data.notebooks || []).findIndex(n => n.id === notebook.id);
+    if (idx >= 0) data.notebooks[idx] = notebook; else (data.notebooks ||= []).push(notebook);
+    localSet(data);
+  } else {
+    await cloudSaveNotebook(uid, notebook);
+  }
+}
+
+export async function deleteNotebook(uid, notebookId) {
+  if (!uid) {
+    const data = localGet();
+    data.notebooks = (data.notebooks || []).filter(n => n.id !== notebookId);
+    data.notebookPages = (data.notebookPages || []).filter(p => p.notebookId !== notebookId);
+    localSet(data);
+  } else {
+    const pages = await cloudGetNotebookPages(uid, notebookId);
+    await Promise.all([
+      ...pages.map(page => cloudDeleteNotebookPage(uid, notebookId, page.id)),
+      cloudDeleteNotebook(uid, notebookId),
+    ]);
+  }
+}
+
+export async function getNotebookPages(uid, notebookId) {
+  if (!notebookId) return [];
+  if (!uid) return (localGet().notebookPages || []).filter(p => p.notebookId === notebookId);
+  return await cloudGetNotebookPages(uid, notebookId);
+}
+
+export async function saveNotebookPage(uid, notebookId, page) {
+  if (!notebookId) return;
+  if (!uid) {
+    const data = localGet();
+    const idx = (data.notebookPages || []).findIndex(p => p.id === page.id && p.notebookId === notebookId);
+    if (idx >= 0) data.notebookPages[idx] = page; else (data.notebookPages ||= []).push(page);
+    localSet(data);
+  } else {
+    await cloudSaveNotebookPage(uid, notebookId, page);
+  }
+}
+
+export async function deleteNotebookPage(uid, notebookId, pageId) {
+  if (!notebookId || !pageId) return;
+  if (!uid) {
+    const data = localGet();
+    const doomedIds = new Set([pageId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const page of (data.notebookPages || [])) {
+        if (page.notebookId === notebookId && doomedIds.has(page.parentId) && !doomedIds.has(page.id)) {
+          doomedIds.add(page.id);
+          changed = true;
+        }
+      }
+    }
+    data.notebookPages = (data.notebookPages || []).filter(p => !(p.notebookId === notebookId && doomedIds.has(p.id)));
+    localSet(data);
+  } else {
+    const pages = await cloudGetNotebookPages(uid, notebookId);
+    const doomedIds = new Set([pageId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const page of pages) {
+        if (doomedIds.has(page.parentId) && !doomedIds.has(page.id)) {
+          doomedIds.add(page.id);
+          changed = true;
+        }
+      }
+    }
+    await Promise.all([...doomedIds].map(id => cloudDeleteNotebookPage(uid, notebookId, id)));
   }
 }
 

@@ -28,6 +28,8 @@ export async function ensureLeaderboardEntry(uid, displayName, initials) {
       purchasedItems: [],
       tasksCompleted: 0,
       worksFinished: 0,
+      notebooksEnabled: true,
+      notebookSocialsEnabled: false,
       updatedAt: Date.now(),
     });
   } else {
@@ -36,6 +38,12 @@ export async function ensureLeaderboardEntry(uid, displayName, initials) {
     const updates = { displayName: displayName || 'User', initials: initials || '?', updatedAt: Date.now() };
     if (data.pointsBalance === undefined) {
       updates.pointsBalance = data.totalPoints || 0;
+    }
+    if (data.notebooksEnabled === undefined) {
+      updates.notebooksEnabled = true;
+    }
+    if (data.notebookSocialsEnabled === undefined) {
+      updates.notebookSocialsEnabled = false;
     }
     await updateDoc(ref, updates);
   }
@@ -123,7 +131,7 @@ export async function getPublicProfile(uid) {
 }
 
 // ── Profile editing ───────────────────────────────────────────────
-export async function updateProfile(uid, { displayName, username, avatarColor, status, photoURL }) {
+export async function updateProfile(uid, { displayName, username, avatarColor, status, photoURL, notebooksEnabled, notebookSocialsEnabled }) {
   if (!uid) return;
   const ref = doc(db, 'leaderboard', uid);
   const updates = { updatedAt: Date.now() };
@@ -132,6 +140,8 @@ export async function updateProfile(uid, { displayName, username, avatarColor, s
   if (avatarColor !== undefined) updates.avatarColor = avatarColor;
   if (status     !== undefined) updates.status      = status.trim().slice(0, 80);
   if (photoURL !== undefined) updates.photoURL = photoURL || null;
+  if (notebooksEnabled !== undefined) updates.notebooksEnabled = Boolean(notebooksEnabled);
+  if (notebookSocialsEnabled !== undefined) updates.notebookSocialsEnabled = Boolean(notebookSocialsEnabled);
   await updateDoc(ref, updates);
 }
 

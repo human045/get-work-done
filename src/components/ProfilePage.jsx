@@ -103,6 +103,9 @@ export default function ProfilePage({ user, isGuest, uid, myPoints }) {
         : user.email?.[0]?.toUpperCase() || 'U')
     : 'G';
   const displayName = user?.displayName || (isGuest ? 'Guest' : user?.email?.split('@')[0] || 'User');
+  const photoURL = myPoints?.photoURL || user?.photoURL || null;
+  const notebooksEnabled = myPoints?.notebooksEnabled ?? true;
+  const notebookSocialsEnabled = myPoints?.notebookSocialsEnabled ?? false;
 
   return (
     <div style={{
@@ -115,18 +118,24 @@ export default function ProfilePage({ user, isGuest, uid, myPoints }) {
         <div style={{ textAlign: 'center', marginBottom: 20 }} className="fade-in">
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: resolveAvatarBg(myPoints?.avatarColor),
+            background: photoURL ? 'transparent' : resolveAvatarBg(myPoints?.avatarColor),
             color: '#fff', fontSize: 22, fontWeight: 700,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 12,
             boxShadow: '0 0 0 4px var(--bg), 0 0 0 6px var(--border)',
+            overflow: 'hidden',
           }}>
-            {initials}
+            {photoURL ? <img src={photoURL} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
           </div>
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.3px' }}>{displayName}</div>
           <div style={{ fontSize: 13, color: 'var(--text3)', marginTop: 3 }}>
             {user?.email || (isGuest ? 'Guest — local storage only' : '')}
           </div>
+          {!!myPoints?.username && (
+            <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 6 }}>
+              @{myPoints.username}
+            </div>
+          )}
 
           {/* ── Status ── */}
           {!isGuest && (
@@ -183,12 +192,32 @@ export default function ProfilePage({ user, isGuest, uid, myPoints }) {
           )}
 
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            marginTop: 10, fontSize: 11,
-            background: 'var(--bg3)', border: '1px solid var(--border)',
-            borderRadius: 20, padding: '3px 10px', color: 'var(--text3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            flexWrap: 'wrap', marginTop: 12,
           }}>
-            {isGuest ? '🔒 Local only' : '☁️ Cloud sync on'}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 20, padding: '3px 10px', color: 'var(--text3)',
+            }}>
+              {isGuest ? '🔒 Local only' : '☁️ Cloud sync on'}
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 20, padding: '3px 10px',
+              color: notebooksEnabled ? 'var(--accent)' : 'var(--text3)',
+            }}>
+              {notebooksEnabled ? '📚 Notebooks enabled' : '📚 Notebooks hidden'}
+            </div>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              fontSize: 11, background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 20, padding: '3px 10px',
+              color: notebookSocialsEnabled ? 'var(--success)' : 'var(--text3)',
+            }}>
+              {notebookSocialsEnabled ? '👥 Notebook socials on' : '👥 Notebook socials off'}
+            </div>
           </div>
         </div>
 

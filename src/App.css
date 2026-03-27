@@ -1498,6 +1498,403 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   font-weight: 700;
 }
 
+/* ── NOTEBOOKS APP ───────────────────────────────────────────── */
+.notebooks-app {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px 280px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-primary) 10%, transparent), transparent 30%),
+    var(--md-surface);
+}
+.notebooks-brandbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-outline-var) 80%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--md-surface-1) 95%, transparent), color-mix(in srgb, var(--md-surface) 88%, transparent)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-primary) 14%, transparent), transparent 36%);
+}
+.notebooks-brandblock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.notebooks-brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.notebooks-brand {
+  font-family: var(--md-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--md-on-surface);
+}
+.notebooks-brand-sub {
+  font-size: 12px;
+  color: var(--md-outline);
+}
+.notebooks-brand-link {
+  background: none;
+  border: none;
+  color: var(--md-primary);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+}
+.notebooks-brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-primary) 14%, transparent);
+  color: var(--md-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.notebooks-rail,
+.notebooks-index {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--md-outline-var);
+  background: color-mix(in srgb, var(--md-surface-1) 96%, transparent);
+}
+.notebooks-workspace {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.notebooks-app-rail-collapsed {
+  grid-template-columns: 72px 280px minmax(0, 1fr);
+}
+.notebooks-app-index-collapsed {
+  grid-template-columns: 220px 76px minmax(0, 1fr);
+}
+.notebooks-app-rail-collapsed.notebooks-app-index-collapsed {
+  grid-template-columns: 72px 76px minmax(0, 1fr);
+}
+.notebooks-rail-header,
+.notebooks-index-header,
+.notebooks-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-outline-var) 80%, transparent);
+}
+.notebooks-rail-title,
+.notebooks-index-title {
+  font-size: 20px;
+  font-family: var(--md-font-display);
+  color: var(--md-on-surface);
+}
+.notebooks-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--md-outline);
+}
+.notebooks-rail-list,
+.notebooks-index-tree {
+  flex: 1;
+  overflow: auto;
+  padding: 14px 12px 18px;
+}
+.notebooks-app-rail-collapsed .notebooks-rail-title,
+.notebooks-app-rail-collapsed .notebooks-empty-side,
+.notebooks-app-rail-collapsed .notebook-card-copy,
+.notebooks-app-rail-collapsed .notebooks-eyebrow {
+  display: none;
+}
+.notebooks-app-rail-collapsed .notebooks-rail-header {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 16px 8px 10px;
+  gap: 10px;
+}
+.notebooks-app-rail-collapsed .notebooks-index-actions {
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+}
+.notebooks-app-rail-collapsed .notebooks-rail-list {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 8px;
+}
+.notebooks-app-rail-collapsed .notebook-card {
+  justify-content: center;
+  padding: 12px 8px;
+  border-radius: 16px;
+  margin-bottom: 10px;
+}
+.notebooks-app-index-collapsed .notebooks-index-title,
+.notebooks-app-index-collapsed .notebooks-index-name-input,
+.notebooks-app-index-collapsed .notebooks-index-tree,
+.notebooks-app-index-collapsed .notebooks-index .notebooks-eyebrow {
+  display: none;
+}
+.notebooks-app-index-collapsed .notebooks-index-header {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 16px 8px 10px;
+  gap: 10px;
+}
+.notebooks-app-index-collapsed .notebooks-index-actions {
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+}
+.notebooks-app-rail-collapsed .notebooks-rail,
+.notebooks-app-index-collapsed .notebooks-index {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--md-surface-2) 84%, transparent), color-mix(in srgb, var(--md-surface-1) 96%, transparent));
+}
+.notebooks-app-rail-collapsed .btn-icon,
+.notebooks-app-index-collapsed .btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  margin: 0 auto;
+}
+.notebooks-app-rail-collapsed .notebook-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  font-size: 19px;
+}
+.notebook-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--md-outline) 14%, transparent);
+  background: color-mix(in srgb, var(--md-surface-2) 84%, transparent);
+  color: var(--md-on-surface-var);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.notebook-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+}
+.notebook-card.active {
+  color: var(--md-on-surface);
+  background: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface-2));
+  border-color: color-mix(in srgb, var(--md-primary) 38%, transparent);
+}
+.notebook-card-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--md-primary) 18%, transparent);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.notebook-card-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.notebook-card-title,
+.notebook-card-sub,
+.notebook-page-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notebook-card-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.notebook-card-sub {
+  font-size: 11px;
+  color: var(--md-outline);
+}
+.notebook-page-node {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface-var);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.notebook-page-node:hover {
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+}
+.notebook-page-node.active {
+  background: color-mix(in srgb, var(--md-primary) 16%, transparent);
+  color: var(--md-primary);
+}
+.notebook-page-caret {
+  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-outline);
+  flex-shrink: 0;
+}
+.notebook-editor-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.notebooks-editor-meta {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.notebooks-editor-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.notebooks-editor-actions,
+.notebooks-index-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notebooks-editor-actions-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.notepad-tool-btn-danger {
+  color: var(--md-error);
+  border-color: color-mix(in srgb, var(--md-error) 24%, transparent);
+}
+.notepad-tool-btn-danger:hover {
+  color: var(--md-error);
+  border-color: color-mix(in srgb, var(--md-error) 42%, transparent);
+}
+.notebooks-page-title-input,
+.notebooks-notebook-name-input,
+.notebooks-index-name-input {
+  background: transparent;
+  color: var(--md-on-surface);
+  border: none;
+  outline: none;
+  font-family: var(--md-font-display);
+}
+.notebooks-page-title-input {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 600;
+  line-height: 1;
+}
+.notebooks-notebook-name-input {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-outline);
+}
+.notebooks-index-name-input {
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--md-on-surface);
+  width: 100%;
+}
+.notebooks-editor-toolbar {
+  padding-top: 0;
+}
+.notebooks-editor-toolbar .notepad-tool-btn {
+  border-radius: 999px;
+  background: transparent;
+  border-color: color-mix(in srgb, var(--md-outline) 14%, transparent);
+}
+.notebooks-editor-toolbar .notepad-tool-btn:hover {
+  background: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
+}
+.notebooks-editor-toolbar .notepad-tool-btn-active {
+  background: color-mix(in srgb, var(--md-primary) 14%, transparent);
+}
+.notebooks-social-note {
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--md-outline);
+  line-height: 1.45;
+}
+.notebooks-sheet-wrap {
+  padding-top: 14px;
+}
+.notebooks-empty-main,
+.notebooks-empty-side,
+.notebooks-empty-tree {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--md-outline);
+}
+.notebooks-empty-main {
+  flex: 1;
+  flex-direction: column;
+  text-align: center;
+  padding: 40px;
+}
+.notebooks-empty-title {
+  font-size: 22px;
+  font-family: var(--md-font-display);
+  color: var(--md-on-surface);
+}
+.notebooks-empty-copy {
+  max-width: 420px;
+  line-height: 1.6;
+}
+.notebooks-empty-side {
+  flex-direction: column;
+  padding: 24px 16px;
+  text-align: center;
+}
+.notebooks-empty-tree {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--md-outline) 24%, transparent);
+  background: transparent;
+  cursor: pointer;
+}
+
 /* ── EMPTY STATE ─────────────────────────────────────────────── */
 .empty-state {
   display: flex;
@@ -1650,6 +2047,62 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   .dashboard { padding: 16px; }
   .works-grid { grid-template-columns: 1fr; }
   .topbar { height: 56px; }
+  .notebooks-app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  .notebooks-brandbar {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .notebooks-brand-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .notebooks-brand {
+    font-size: 22px;
+  }
+  .notebooks-rail,
+  .notebooks-index {
+    border-right: none;
+    border-bottom: 1px solid var(--md-outline-var);
+  }
+  .notebooks-rail-list {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-top: 12px;
+  }
+  .notebook-card {
+    min-width: 190px;
+    margin-bottom: 0;
+  }
+  .notebooks-index-tree {
+    padding-top: 10px;
+  }
+  .notebooks-editor-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .notebooks-editor-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .notebooks-editor-stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .notebooks-app-rail-collapsed,
+  .notebooks-app-index-collapsed,
+  .notebooks-app-rail-collapsed.notebooks-app-index-collapsed {
+    grid-template-columns: 1fr;
+  }
+  .notebooks-page-title-input {
+    width: 100%;
+    font-size: clamp(24px, 8vw, 34px);
+  }
   .notepad-header,
   .notepad-toolbar,
   .notepad-sheet-wrap { padding-left: 16px; padding-right: 16px; }
@@ -1815,6 +2268,23 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
 
   .auth-sub {
     font-size: 13px;
+  }
+  .notebooks-rail-header,
+  .notebooks-index-header,
+  .notebooks-editor-header {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .notebooks-index-name-input {
+    font-size: 20px;
+  }
+  .notebooks-editor-actions .notepad-tool-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .notebooks-editor-actions-primary {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .notepad-header {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Home, Clock, ChevronDown,
   FolderOpen, Plus, PanelLeftClose, PanelLeftOpen,
-  Star, Calendar, Timer, Wallet
+  Star, Calendar, Timer, Wallet, BookOpen
 } from 'lucide-react';
 
 const E = {
@@ -103,6 +103,7 @@ export default function Sidebar({
   collapsed, onToggle, mobileMenuOpen,
   works, workspaces, activeWsId, setActiveWsId,
   page, setPage, onOpenWork, onNewWork, onNewWorkspace,
+  notebooksEnabled,
 }) {
   const [recentOpen, setRecentOpen]     = useState(true);
   const [workspacesOpen, setWsOpen]     = useState(true);
@@ -321,6 +322,9 @@ export default function Sidebar({
               <div style={{ marginBottom: 4 }}>
                 <NavItem icon={<Timer size={13} />} label="Pomodoro" active={page === 'pomodoro'} onClick={() => setPage('pomodoro')} indent />
                 <NavItem icon={<Wallet size={13} />} label="Expense Tracker" active={page === 'expense-tracker'} onClick={() => setPage('expense-tracker')} indent />
+                {notebooksEnabled && (
+                  <NavItem icon={<BookOpen size={13} />} label="Notebooks" active={page === 'notebooks'} onClick={() => setPage('notebooks')} indent />
+                )}
               </div>
             )}
           </>
@@ -353,6 +357,20 @@ export default function Sidebar({
               >
                 <Wallet size={16} />
               </button>
+             {notebooksEnabled && (
+               <button
+                  onClick={() => setPage('notebooks')}
+                  title="Notebooks"
+                  style={{
+                    background: page === 'notebooks' ? 'color-mix(in srgb, var(--md-primary) 16%, transparent)' : 'none',
+                    border: 'none', cursor: 'pointer',
+                    color: page === 'notebooks' ? 'var(--md-primary)' : 'var(--md-outline)',
+                    padding: 8, borderRadius: 'var(--md-shape-md)', display: 'flex',
+                  }}
+                >
+                  <BookOpen size={16} />
+                </button>
+             )}
           </div>
         )}
 

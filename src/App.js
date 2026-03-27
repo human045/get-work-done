@@ -4,6 +4,7 @@ import { auth, onAuthStateChanged, signOut } from './firebase';
 import { getWorks, getWorkspaces } from './storage';
 import { applyTheme } from './themes';
 import { ensureLeaderboardEntry, getMyPoints } from './points';
+import { getLocalPreferences, getUserPreferences } from './preferences';
 import './App.css';
 
 import Topbar from './components/Topbar';
@@ -20,6 +21,7 @@ import PomodoroTimer from './components/PomodoroTimer';
 import UpcomingPage from './components/UpcomingPage';
 import ExpenseTracker from './components/ExpenseTracker';
 import BottomNav from './components/BottomNav';
+import NotebooksPage from './components/NotebooksPage';
 
 const THEME_KEY = 'gwd_theme';
 const GUEST_KEY = 'gwd_guest';
@@ -57,6 +59,13 @@ export default function App() {
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setThemeState] = useState(() => localStorage.getItem(THEME_KEY) || 'github-dark');
+  const [guestPreferences, setGuestPreferences] = useState(() => getLocalPreferences());
+  const loggedIn = authState === 'authed' || authState === 'guest';
+  const preferences = authState === 'guest' ? guestPreferences : getUserPreferences(myPoints);
+  const notebooksEnabled = preferences.notebooksEnabled;
+  const notebookSocialsEnabled = preferences.notebookSocialsEnabled;
+  const inNotebooksApp = page === 'notebooks';
+  const showSidebar = loggedIn && page !== 'work' && !inNotebooksApp;
 
   function setPage(nextPage, extra = {}) {
     setPageState(nextPage);
@@ -103,6 +112,7 @@ export default function App() {
           setUser(null);
           setAuthState('guest');
           setWorks(await getWorks(null));
+          setGuestPreferences(getLocalPreferences());
         } else {
           setUser(null);
           setAuthState('unauthed');
@@ -125,6 +135,7 @@ export default function App() {
     setAuthState('guest');
     const stored = JSON.parse(localStorage.getItem('gwd_data') || '{"works":[]}');
     setWorks(stored.works || []);
+    setGuestPreferences(getLocalPreferences());
   }
 
   function handleWorkUpdate(updated) {
@@ -176,6 +187,12 @@ export default function App() {
     });
   }
 
+  useEffect(() => {
+    if (page === 'notebooks' && !notebooksEnabled) {
+      setPage('dashboard');
+    }
+  }, [page, notebooksEnabled]);
+
   if (authState === 'loading') {
     return (
       <div className="app" style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -188,12 +205,10 @@ export default function App() {
   }
 
   const uid = user?.uid || null;
-  const loggedIn = authState === 'authed' || authState === 'guest';
-  const showSidebar = loggedIn && page !== 'work';
 
   return (
     <div className="app">
-      {loggedIn && (
+      {loggedIn && !inNotebooksApp && (
         <Topbar
           user={user}
           myPoints={myPoints}
@@ -229,6 +244,7 @@ export default function App() {
             onOpenWork={openWorkPage}
             onNewWork={() => { setShowAddWork(true); setMobileMenuOpen(false); }}
             onNewWorkspace={() => {}}
+            notebooksEnabled={notebooksEnabled}
           />
         )}
 
@@ -242,13 +258,32 @@ export default function App() {
           ) : page === 'leaderboard' ? (
             <Leaderboard uid={uid} myPoints={myPoints} onViewProfile={openPublicProfile} />
           ) : page === 'settings' ? (
-            <SettingsPage user={user} myPoints={myPoints} onPointsRefresh={refreshPoints} />
+            <SettingsPage
+              user={user}
+              myPoints={myPoints}
+              isGuest={authState === 'guest'}
+              onPointsRefresh={refreshPoints}
+              onPreferencesChange={setGuestPreferences}
+            />
           ) : page === 'publicProfile' && publicUid ? (
             <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.displayName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
           ) : page === 'pomodoro' ? (
             <PomodoroTimer works={works} onWorkUpdate={handleWorkUpdate} uid={uid} />
           ) : page === 'expense-tracker' ? (
             <ExpenseTracker uid={uid} user={user} isGuest={authState === 'guest'} />
+          ) : page === 'notebooks' ? (
+            <NotebooksPage
+              uid={uid}
+              user={user}
+              isGuest={authState === 'guest'}
+              myPoints={myPoints}
+              onExit={() => setPage('dashboard')}
+              onOpenProfile={() => setPage('profile')}
+              onOpenSettings={() => setPage('settings')}
+              onOpenLeaderboard={() => setPage('leaderboard')}
+              onSignOut={handleSignOut}
+              socialsEnabled={notebookSocialsEnabled}
+            />
           ) : page === 'upcoming' ? (
             <UpcomingPage works={works} onOpenWork={openWorkPage} workspaces={workspaces} />
           ) : (
@@ -269,11 +304,11 @@ export default function App() {
         </div>
       </div>
 
-      {loggedIn && (
+      {loggedIn && !inNotebooksApp && (
         <FriendsPanel user={user} isGuest={authState === 'guest'} myPoints={myPoints} onViewProfile={openPublicProfile} />
       )}
 
-      {loggedIn && (
+      {loggedIn && !inNotebooksApp && (
         <BottomNav page={page} setPage={setPage} onMenuToggle={() => setMobileMenuOpen(true)} />
       )}
     </div>
