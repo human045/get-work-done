@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import posthog from 'posthog-js';
 import { useUser, useAuth } from '@clerk/react';
-import { getWorks, getWorkspaces } from './storage';
+import { getWorks, getWorkspaces, migrateLegacyUserData } from './storage';
 import { applyTheme } from './themes';
 import { ensureLeaderboardEntry, getMyPoints } from './points';
-import { bridgeToFirebase } from './clerkFirebaseBridge';
+import { bridgeToFirebase, getLegacyFirebaseUid } from './clerkFirebaseBridge';
 import './App.css';
 
 import Topbar from './components/Topbar';
@@ -87,6 +87,8 @@ export default function App() {
     if (!isLoaded) return; // Clerk still initialising
 
     async function onSignedIn() {
+      const legacyFirebaseUid = await getLegacyFirebaseUid();
+
       // Bridge to Firebase so Firestore rules (request.auth != null) pass
       await bridgeToFirebase();
 
@@ -96,6 +98,15 @@ export default function App() {
       const displayName = clerkUser.fullName
         || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0]
         || 'User';
+
+      try {
+        const migration = await migrateLegacyUserData(legacyFirebaseUid, uid);
+        if (migration.migrated) {
+          console.info('[Auth Migration] Restored legacy Firebase data', migration);
+        }
+      } catch (error) {
+        console.warn('[Auth Migration] Could not migrate legacy Firebase data:', error);
+      }
 
       posthog.identify(uid, { name: displayName });
 
@@ -208,21 +219,23 @@ export default function App() {
 
   return (
     <div className="app">
-      <Topbar
-        user={user}
-        myPoints={myPoints}
-        isGuest={authState === 'guest'}
-        theme={theme}
-        setTheme={setThemeState}
-        showBack={page !== 'dashboard'}
-        onBack={goBack}
-        onHome={goBack}
-        onSignOut={handleSignOut}
-        onOpenProfile={() => setPage('profile')}
-        onOpenLeaderboard={() => setPage('leaderboard')}
-        onOpenSettings={() => setPage('settings')}
-        onMenuToggle={() => setMobileMenuOpen(true)}
-      />
+      {loggedIn && (
+        <Topbar
+          user={user}
+          myPoints={myPoints}
+          isGuest={authState === 'guest'}
+          theme={theme}
+          setTheme={setThemeState}
+          showBack={page !== 'dashboard'}
+          onBack={goBack}
+          onHome={goBack}
+          onSignOut={handleSignOut}
+          onOpenProfile={() => setPage('profile')}
+          onOpenLeaderboard={() => setPage('leaderboard')}
+          onOpenSettings={() => setPage('settings')}
+          onMenuToggle={() => setMobileMenuOpen(true)}
+        />
+      )}
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <div className={`sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)} />

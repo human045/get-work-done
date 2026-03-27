@@ -1,6 +1,16 @@
-import { db, doc, setDoc, deleteDoc, collection, getDocs } from './firebase';
+import { db, doc, setDoc, getDoc, deleteDoc, collection, getDocs } from './firebase';
 
 const LOCAL_KEY = 'gwd_data';
+const MIGRATION_PREFIX = 'gwd_migrated_legacy_user_';
+const MIGRATABLE_USER_COLLECTIONS = [
+  'works',
+  'deletedWorks',
+  'workspaces',
+  'accounts',
+  'transactions',
+  'categories',
+  'budgets',
+];
 
 function localGet() {
   try {
@@ -9,6 +19,108 @@ function localGet() {
   } catch { return { works: [], deletedWorks: [], workspaces: [] }; }
 }
 function localSet(data) { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); }
+
+function migrationMarker(fromUid, toUid) {
+  return `${MIGRATION_PREFIX}${fromUid}_${toUid}`;
+}
+
+function hasMeaningfulLeaderboardData(data) {
+  if (!data) return false;
+  return Boolean(
+    data.totalPoints ||
+    data.pointsBalance ||
+    data.tasksCompleted ||
+    data.worksFinished ||
+    data.username ||
+    data.status ||
+    data.avatarColor ||
+    data.photoURL ||
+    (Array.isArray(data.finishedWorks) && data.finishedWorks.length) ||
+    (Array.isArray(data.purchasedItems) && data.purchasedItems.length)
+  );
+}
+
+async function readUserCollection(uid, colName) {
+  const snap = await getDocs(collection(db, 'users', uid, colName));
+  return snap.docs;
+}
+
+export async function migrateLegacyUserData(fromUid, toUid) {
+  if (!fromUid || !toUid || fromUid === toUid) {
+    return { migrated: false, reason: 'invalid-source-or-target' };
+  }
+
+  const marker = migrationMarker(fromUid, toUid);
+  if (localStorage.getItem(marker) === '1') {
+    return { migrated: false, reason: 'already-migrated' };
+  }
+
+  const [legacyBoardSnap, targetBoardSnap, ...collectionSnaps] = await Promise.all([
+    getDoc(doc(db, 'leaderboard', fromUid)),
+    getDoc(doc(db, 'leaderboard', toUid)),
+    ...MIGRATABLE_USER_COLLECTIONS.flatMap(colName => [
+      readUserCollection(fromUid, colName),
+      readUserCollection(toUid, colName),
+    ]),
+  ]);
+
+  const perCollection = {};
+  let legacyDocCount = 0;
+  let targetDocCount = 0;
+
+  MIGRATABLE_USER_COLLECTIONS.forEach((colName, index) => {
+    const legacyDocs = collectionSnaps[index * 2];
+    const targetDocs = collectionSnaps[(index * 2) + 1];
+    legacyDocCount += legacyDocs.length;
+    targetDocCount += targetDocs.length;
+    perCollection[colName] = legacyDocs;
+  });
+
+  const legacyHasData = legacyBoardSnap.exists() || legacyDocCount > 0;
+  const targetHasMeaningfulData =
+    hasMeaningfulLeaderboardData(targetBoardSnap.exists() ? targetBoardSnap.data() : null) ||
+    targetDocCount > 0;
+
+  if (!legacyHasData) {
+    return { migrated: false, reason: 'no-legacy-data-found' };
+  }
+
+  if (targetHasMeaningfulData) {
+    return { migrated: false, reason: 'target-already-has-data' };
+  }
+
+  const writes = [];
+
+  if (legacyBoardSnap.exists()) {
+    writes.push(
+      setDoc(doc(db, 'leaderboard', toUid), {
+        ...legacyBoardSnap.data(),
+        uid: toUid,
+        migratedFromUid: fromUid,
+        updatedAt: Date.now(),
+      })
+    );
+  }
+
+  for (const colName of MIGRATABLE_USER_COLLECTIONS) {
+    for (const itemDoc of perCollection[colName]) {
+      writes.push(
+        setDoc(doc(db, 'users', toUid, colName, itemDoc.id), itemDoc.data())
+      );
+    }
+  }
+
+  await Promise.all(writes);
+  localStorage.setItem(marker, '1');
+
+  return {
+    migrated: true,
+    fromUid,
+    toUid,
+    migratedCollections: MIGRATABLE_USER_COLLECTIONS.filter(colName => perCollection[colName].length > 0),
+    migratedDocs: legacyDocCount + (legacyBoardSnap.exists() ? 1 : 0),
+  };
+}
 
 // ─── CLOUD WORKS ──────────────────────────────────────────────────
 async function cloudGetWorks(uid) {

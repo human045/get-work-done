@@ -13,3 +13,21 @@ export async function bridgeToFirebase() {
     console.warn('[ClerkFirebaseBridge] Anonymous sign-in failed:', e.message);
   }
 }
+
+/**
+ * Reads the pre-migration Firebase user id from persisted auth state, if one exists.
+ * We use this to recover data that was stored under the legacy Firebase Auth uid.
+ */
+export async function getLegacyFirebaseUid() {
+  try {
+    if (typeof auth.authStateReady === 'function') {
+      await auth.authStateReady();
+    }
+    const user = auth.currentUser;
+    if (!user || user.isAnonymous) return null;
+    return user.uid || null;
+  } catch (e) {
+    console.warn('[ClerkFirebaseBridge] Could not read legacy Firebase uid:', e.message);
+    return null;
+  }
+}
