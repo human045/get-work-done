@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import posthog from 'posthog-js';
 import { Check, AlertCircle, CheckCircle2, Camera, X } from 'lucide-react';
 import { updateProfile as updateFirebaseProfile } from 'firebase/auth';
 import { auth, storage, ref, uploadBytes, getDownloadURL } from '../firebase';
@@ -144,6 +145,7 @@ export default function SettingsPage({ user, myPoints, onPointsRefresh }) {
 
       await onPointsRefresh();
       setPhotoFile(null);
+      posthog.capture('profile_saved');
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {

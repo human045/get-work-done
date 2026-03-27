@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import posthog from 'posthog-js';
 import {
   auth, googleProvider,
   signInWithPopup, createUserWithEmailAndPassword,
@@ -21,7 +22,12 @@ export default function AuthScreen({ onGuest }) {
 
   async function handleGoogle() {
     setError(''); setLoading(true);
-    try { await signInWithPopup(auth, googleProvider); }
+    try {
+      const cred = await signInWithPopup(auth, googleProvider);
+      const isNew = cred.additionalUserInfo?.isNewUser;
+      posthog.identify(cred.user.uid, { name: cred.user.displayName });
+      posthog.capture(isNew ? 'signed_up' : 'signed_in', { method: 'google' });
+    }
     catch (e) {
       if (e.code !== 'auth/popup-closed-by-user') setError('Google sign-in failed. Try again.');
     }
@@ -35,8 +41,12 @@ export default function AuthScreen({ onGuest }) {
       if (mode === 'signup') {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() });
+        posthog.identify(cred.user.uid, { name: name.trim() || undefined });
+        posthog.capture('signed_up', { method: 'email' });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        posthog.identify(cred.user.uid, { name: cred.user.displayName || undefined });
+        posthog.capture('signed_in', { method: 'email' });
       }
     } catch (e) {
       setError(

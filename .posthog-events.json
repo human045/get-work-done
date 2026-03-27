@@ -1,0 +1,72 @@
+[
+  {
+    "event": "signed_up",
+    "description": "User creates a new account via email or Google",
+    "file": "src/components/AuthScreen.jsx"
+  },
+  {
+    "event": "signed_in",
+    "description": "User signs in to their existing account (email or Google)",
+    "file": "src/components/AuthScreen.jsx"
+  },
+  {
+    "event": "guest_mode_started",
+    "description": "User chooses to continue as a guest without an account",
+    "file": "src/components/AuthScreen.jsx"
+  },
+  {
+    "event": "work_created",
+    "description": "User creates a new work item on the dashboard",
+    "file": "src/components/Dashboard.jsx"
+  },
+  {
+    "event": "work_finished",
+    "description": "User marks a work item as finished (top of completion funnel)",
+    "file": "src/components/Dashboard.jsx"
+  },
+  {
+    "event": "work_deleted",
+    "description": "User deletes a work item from the dashboard",
+    "file": "src/components/Dashboard.jsx"
+  },
+  {
+    "event": "task_completed",
+    "description": "User completes a todo task within a work item (awards 10 points)",
+    "file": "src/components/WorkPage.jsx"
+  },
+  {
+    "event": "pomodoro_started",
+    "description": "User starts a Pomodoro focus or break session",
+    "file": "src/components/PomodoroTimer.jsx"
+  },
+  {
+    "event": "pomodoro_session_completed",
+    "description": "A Pomodoro focus or break session timer reaches zero",
+    "file": "src/components/PomodoroTimer.jsx"
+  },
+  {
+    "event": "account_created",
+    "description": "User creates a new financial account in the Expense Tracker",
+    "file": "src/components/ExpenseTracker.jsx"
+  },
+  {
+    "event": "transaction_recorded",
+    "description": "User records a new financial transaction (withdrawal, deposit, or transfer)",
+    "file": "src/components/ExpenseTracker.jsx"
+  },
+  {
+    "event": "friend_request_sent",
+    "description": "User sends a friend request to another user",
+    "file": "src/components/FriendsPanel.jsx"
+  },
+  {
+    "event": "friend_request_accepted",
+    "description": "User accepts an incoming friend request",
+    "file": "src/components/FriendsPanel.jsx"
+  },
+  {
+    "event": "profile_saved",
+    "description": "User saves their profile settings (display name, username, avatar, status)",
+    "file": "src/components/SettingsPage.jsx"
+  }
+]

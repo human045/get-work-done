@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import posthog from 'posthog-js';
 import { Play, Pause, RotateCcw, Settings, Search, X, ChevronRight } from 'lucide-react';
 import { saveWork } from '../storage';
 import { awardTaskPoints } from '../points';
@@ -28,8 +29,9 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
   const handleComplete = useCallback(() => {
     setIsRunning(false);
     clearInterval(timerRef.current);
+    posthog.capture('pomodoro_session_completed', { mode });
     setMode(m => (m === 'work' ? 'break' : 'work'));
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     if (isRunning) {
@@ -137,7 +139,10 @@ export default function PomodoroTimer({ works, onWorkUpdate, uid }) {
 
           {/* Controls */}
           <div className="timer-controls">
-            <button className="timer-play-btn" onClick={() => setIsRunning(r => !r)}>
+            <button className="timer-play-btn" onClick={() => {
+              if (!isRunning) posthog.capture('pomodoro_started', { mode });
+              setIsRunning(r => !r);
+            }}>
               {isRunning ? <Pause size={20} /> : <Play size={20} style={{ marginLeft: 2 }} />}
               {isRunning ? 'Pause' : 'Start'}
             </button>

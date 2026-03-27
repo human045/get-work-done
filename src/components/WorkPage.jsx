@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import posthog from 'posthog-js';
 import { Check, Plus, Trash2 } from 'lucide-react';
 import StarRating from './StarRating';
 import { saveWork, generateId } from '../storage';
@@ -81,6 +82,7 @@ export default function WorkPage({ work: initialWork, uid, myPoints, onBack, onW
     const newHistory = [{ ...todo, done: true, completedAt: Date.now() }, ...history];
     await persist({ ...work, todos: newTodos, history: newHistory });
     if (uid) { await awardTaskPoints(uid); showToast(10); }
+    posthog.capture('task_completed');
   }
 
   function deleteTodo(id) {

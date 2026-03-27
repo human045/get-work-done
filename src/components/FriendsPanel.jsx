@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import posthog from 'posthog-js';
 import { Users, UserPlus, Search, Check, X, MessageCircle, UserMinus, Bell, ChevronDown } from 'lucide-react';
 import {
   searchUsers, sendFriendRequest, acceptFriendRequest, declineFriendRequest,
@@ -80,7 +81,13 @@ export default function FriendsPanel({ user, isGuest, onViewProfile }) {
   function isPending(id)       { return outgoing.some(r => r.to === id); }
 
   async function handleAccept(req) {
+    posthog.capture('friend_request_accepted');
     await acceptFriendRequest(req, uid, myName, myInits);
+  }
+
+  async function handleSendRequest(targetUid) {
+    posthog.capture('friend_request_sent');
+    await sendFriendRequest(uid, myName, myInits, targetUid);
   }
 
   // When chat opens, close the panel. When chat closes, reopen panel.
@@ -324,7 +331,7 @@ export default function FriendsPanel({ user, isGuest, onViewProfile }) {
                   index={i}
                   alreadyFriend={isFriend(u.uid)}
                   pending={isPending(u.uid)}
-                  onAdd={() => sendFriendRequest(uid, myName, myInits, u.uid)}
+                  onAdd={() => handleSendRequest(u.uid)}
                   onViewProfile={() => { setOpen(false); onViewProfile(u.uid); }}
                 />
               ))}

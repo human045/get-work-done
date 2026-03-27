@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import {
   Wallet, Landmark, ArrowRightLeft, PieChart,
   Plus, Trash2, ArrowUpRight, ArrowDownRight, RefreshCcw,
@@ -324,6 +325,7 @@ export default function ExpenseTracker({ uid, user, isGuest }) {
     const a = { id: generateId(), ...accForm, balance: Number(accForm.balance) };
     await saveAccount(uid, a);
     setAccounts(p => [a, ...p]);
+    posthog.capture('account_created', { type: a.type, currency: a.currency });
     setShowAccModal(false);
     setAccForm({ name: '', type: 'asset', balance: '0', currency: 'INR' });
   }
@@ -346,6 +348,7 @@ export default function ExpenseTracker({ uid, user, isGuest }) {
     for (const a of upAccs) if (accounts.find(o => o.id === a.id && o.balance !== a.balance)) await saveAccount(uid, a);
     setTransactions(p => [tx, ...p]);
     setAccounts(upAccs);
+    posthog.capture('transaction_recorded', { type: tx.type });
     setShowTxModal(false);
     setTxForm({ description: '', amount: '', type: 'withdrawal', sourceAccountId: '', destAccountId: '', date: Date.now() });
   }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import posthog from 'posthog-js';
 import { auth, onAuthStateChanged } from './firebase';
 import { getWorks, getWorkspaces } from './storage';
 import { applyTheme } from './themes';
@@ -66,6 +67,7 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u); setAuthState('authed');
+        posthog.identify(u.uid, { name: u.displayName || u.email?.split('@')[0] });
         const [loaded, wss] = await Promise.all([getWorks(u.uid), getWorkspaces(u.uid)]);
         setWorks(loaded);
         setWorkspaces(wss);
@@ -98,6 +100,7 @@ export default function App() {
   }
 
   function handleGuest() {
+    posthog.capture('guest_mode_started');
     localStorage.setItem(GUEST_KEY, '1');
     setAuthState('guest');
     const stored = JSON.parse(localStorage.getItem('gwd_data') || '{"works":[]}');
@@ -110,6 +113,7 @@ export default function App() {
   }
 
   function handleSignOut() {
+    posthog.reset();
     localStorage.removeItem(GUEST_KEY);
     sessionStorage.removeItem(NAV_KEY);
     setAuthState('unauthed');

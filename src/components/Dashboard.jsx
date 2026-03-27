@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import posthog from 'posthog-js';
 import { Plus, Pencil, Trash2, ChevronRight, CheckCircle2, Calendar } from 'lucide-react';
 import {
   DndContext, DragOverlay, PointerSensor, TouchSensor,
@@ -209,6 +210,7 @@ export default function Dashboard({
     };
     setWorks([...works, work]);
     await saveWork(uid, work);
+    posthog.capture('work_created', { priority: stars, has_due_date: !!dueDate });
     setShowAddWork(false);
   }
 
@@ -223,6 +225,7 @@ export default function Dashboard({
     if (!deleteTarget) return;
     setWorks(works.filter(w => w.id !== deleteTarget.id));
     await archiveWork(uid, { ...deleteTarget, finishedAt: null });
+    posthog.capture('work_deleted', { priority: deleteTarget.stars });
     setDeleteTarget(null);
   }
 
@@ -231,6 +234,7 @@ export default function Dashboard({
     setWorks(works.filter(w => w.id !== finishTarget.id));
     await archiveWork(uid, { ...finishTarget, finishedAt: Date.now() });
     if (uid) await awardFinishPoints(uid, finishTarget.stars, finishTarget.title, finishTarget.id);
+    posthog.capture('work_finished', { priority: finishTarget.stars, tasks_completed: (finishTarget.history || []).length });
     setFinishTarget(null);
   }
 
