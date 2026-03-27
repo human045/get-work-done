@@ -2,7 +2,8 @@
 
 ## 🔐 Clerk Auth Setup (required before login works)
 - [x] Add Clerk Publishable Key to Vercel (User confirmed)
-- [/] Fix Clerk loading state (Explicit key + Timeout fallback — Pushing now)
+- [x] Fix Clerk loading state (Explicit key + Timeout fallback)
+- [x] Polish Auth UI (Embedded components + Dark theme)
 
 ## 🔥 Firebase — Deploy Updated Security Rules
 - [ ] Open [Firebase Console](https://console.firebase.google.com) → your project → **Firestore → Rules**

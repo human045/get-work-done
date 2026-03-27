@@ -702,6 +702,90 @@ input, textarea { font-family: var(--md-font); outline: none; border: none; }
   border: 1px solid color-mix(in srgb, var(--md-outline) 14%, transparent);
 }
 
+.auth-social-button {
+  min-height: 48px;
+  border-radius: 14px;
+  justify-content: center;
+  gap: 10px;
+  background: var(--md-surface-2);
+  border: 1px solid var(--md-outline-var);
+}
+
+.auth-social-button svg {
+  flex-shrink: 0;
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--md-outline-var);
+  background: var(--md-surface-2);
+  color: var(--md-on-surface);
+  font-size: 15px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-input::placeholder {
+  color: var(--md-outline);
+}
+
+.auth-input:focus {
+  border-color: color-mix(in srgb, var(--md-primary) 70%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--md-surface-2) 82%, white);
+}
+
+.auth-error,
+.auth-success {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.auth-error {
+  background: color-mix(in srgb, var(--md-error) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-error) 28%, transparent);
+  color: var(--md-error);
+}
+
+.auth-success {
+  background: color-mix(in srgb, var(--md-success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-success) 28%, transparent);
+  color: var(--md-success);
+}
+
+.auth-inline-action,
+.auth-inline-center {
+  margin: 4px 0 14px;
+}
+
+.auth-inline-action {
+  text-align: right;
+}
+
+.auth-inline-center {
+  text-align: center;
+}
+
+.auth-inline-action button,
+.auth-inline-center button {
+  background: transparent;
+  color: var(--md-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.auth-submit-button {
+  min-height: 48px;
+  border-radius: 14px;
+}
+
 .auth-loading,
 .auth-provider-error {
   min-height: 320px;

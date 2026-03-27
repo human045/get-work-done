@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import posthog from 'posthog-js';
-import { useUser, useAuth } from '@clerk/react';
-import { getWorks, getWorkspaces, migrateLegacyUserData } from './storage';
+import { auth, onAuthStateChanged, signOut } from './firebase';
+import { getWorks, getWorkspaces } from './storage';
 import { applyTheme } from './themes';
 import { ensureLeaderboardEntry, getMyPoints } from './points';
-import { bridgeToFirebase, getLegacyFirebaseUid } from './clerkFirebaseBridge';
 import './App.css';
 
 import Topbar from './components/Topbar';
@@ -22,125 +21,102 @@ import UpcomingPage from './components/UpcomingPage';
 import ExpenseTracker from './components/ExpenseTracker';
 import BottomNav from './components/BottomNav';
 
-const THEME_KEY  = 'gwd_theme';
-const GUEST_KEY  = 'gwd_guest';
-const NAV_KEY    = 'gwd_nav';
+const THEME_KEY = 'gwd_theme';
+const GUEST_KEY = 'gwd_guest';
+const NAV_KEY = 'gwd_nav';
 const SIDEBAR_KEY = 'gwd_sidebar';
 
 function getInitials(user) {
   if (!user) return 'G';
-  // Support both Clerk user shape and legacy Firebase shape
-  const name = user.fullName || user.displayName;
-  if (name) return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  const email = user.primaryEmailAddress?.emailAddress || user.email;
-  return email?.[0]?.toUpperCase() || 'U';
+  if (user.displayName) return user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  return user.email?.[0]?.toUpperCase() || 'U';
 }
 
 function readNav() {
   try { return JSON.parse(sessionStorage.getItem(NAV_KEY)) || {}; }
   catch { return {}; }
 }
-function saveNav(state) { sessionStorage.setItem(NAV_KEY, JSON.stringify(state)); }
+
+function saveNav(state) {
+  sessionStorage.setItem(NAV_KEY, JSON.stringify(state));
+}
 
 export default function App() {
-  // ── Clerk auth ──────────────────────────────────────────────────
-  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const { signOut: clerkSignOut } = useAuth();
-
-  // ── Local state ─────────────────────────────────────────────────
-  const [authState, setAuthState]   = useState('loading');
-  const [clerkTimedOut, setClerkTimedOut] = useState(false);
-  const [works, setWorks]           = useState([]);
+  const [authState, setAuthState] = useState('loading');
+  const [user, setUser] = useState(null);
+  const [works, setWorks] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
-  const [myPoints, setMyPoints]     = useState(null);
-  const [page, setPageState]        = useState(() => readNav().page || 'dashboard');
-  const [openWork, setOpenWork]     = useState(null);
-  const [publicUid, setPublicUid]   = useState(() => readNav().publicUid || null);
+  const [myPoints, setMyPoints] = useState(null);
+  const [page, setPageState] = useState(() => readNav().page || 'dashboard');
+  const [openWork, setOpenWork] = useState(null);
+  const [publicUid, setPublicUid] = useState(() => readNav().publicUid || null);
   const [activeWsId, setActiveWsId] = useState('general');
   const [showAddWork, setShowAddWork] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem(SIDEBAR_KEY) === 'true'
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setThemeState]      = useState(() => localStorage.getItem(THEME_KEY) || 'github-dark');
+  const [theme, setThemeState] = useState(() => localStorage.getItem(THEME_KEY) || 'github-dark');
 
-  function setPage(p, extra = {}) {
-    setPageState(p);
-    saveNav({ page: p, ...extra });
+  function setPage(nextPage, extra = {}) {
+    setPageState(nextPage);
+    saveNav({ page: nextPage, ...extra });
     setMobileMenuOpen(false);
   }
 
-  useEffect(() => { applyTheme(theme); localStorage.setItem(THEME_KEY, theme); }, [theme]);
-
-  // Timeout fallback — if Clerk never loads (bad key/missing key), unblock the app
   useEffect(() => {
-    if (isLoaded) return;
-    const t = setTimeout(() => {
-      setClerkTimedOut(true);
-      setAuthState('unauthed');
-    }, 6000);
-    return () => clearTimeout(t);
-  }, [isLoaded]);
+    applyTheme(theme);
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
-  // ── Auth effect — driven by Clerk ───────────────────────────────
   useEffect(() => {
-    if (!isLoaded) return; // Clerk still initialising
+    const unsub = onAuthStateChanged(auth, async currentUser => {
+      if (currentUser) {
+        setUser(currentUser);
+        setAuthState('authed');
 
-    async function onSignedIn() {
-      const legacyFirebaseUid = await getLegacyFirebaseUid();
+        const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+        posthog.identify(currentUser.uid, { name: displayName });
 
-      // Bridge to Firebase so Firestore rules (request.auth != null) pass
-      await bridgeToFirebase();
+        const [loadedWorks, loadedWorkspaces] = await Promise.all([
+          getWorks(currentUser.uid),
+          getWorkspaces(currentUser.uid),
+        ]);
 
-      setAuthState('authed');
+        setWorks(loadedWorks);
+        setWorkspaces(loadedWorkspaces);
+        await ensureLeaderboardEntry(currentUser.uid, displayName, getInitials(currentUser));
+        setMyPoints(await getMyPoints(currentUser.uid));
 
-      const uid = clerkUser.id; // Clerk userId is the Firestore key
-      const displayName = clerkUser.fullName
-        || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0]
-        || 'User';
-
-      try {
-        const migration = await migrateLegacyUserData(legacyFirebaseUid, uid);
-        if (migration.migrated) {
-          console.info('[Auth Migration] Restored legacy Firebase data', migration);
+        const nav = readNav();
+        if (nav.page === 'work' && nav.workId) {
+          const work = loadedWorks.find(item => item.id === nav.workId);
+          if (work) setOpenWork(work);
+          else setPage('dashboard');
         }
-      } catch (error) {
-        console.warn('[Auth Migration] Could not migrate legacy Firebase data:', error);
-      }
-
-      posthog.identify(uid, { name: displayName });
-
-      const [loaded, wss] = await Promise.all([getWorks(uid), getWorkspaces(uid)]);
-      setWorks(loaded);
-      setWorkspaces(wss);
-      await ensureLeaderboardEntry(uid, displayName, getInitials(clerkUser));
-      setMyPoints(await getMyPoints(uid));
-
-      const nav = readNav();
-      if (nav.page === 'work' && nav.workId) {
-        const work = loaded.find(w => w.id === nav.workId);
-        if (work) setOpenWork(work); else setPage('dashboard');
-      }
-      if (nav.page === 'publicProfile' && nav.publicUid) setPublicUid(nav.publicUid);
-    }
-
-    if (isSignedIn) {
-      onSignedIn();
-    } else {
-      const isGuest = localStorage.getItem(GUEST_KEY) === '1';
-      if (isGuest) {
-        setAuthState('guest');
-        getWorks(null).then(setWorks);
+        if (nav.page === 'publicProfile' && nav.publicUid) {
+          setPublicUid(nav.publicUid);
+        }
       } else {
-        setAuthState('unauthed');
-        setPage('dashboard');
+        const isGuest = localStorage.getItem(GUEST_KEY) === '1';
+        if (isGuest) {
+          setUser(null);
+          setAuthState('guest');
+          setWorks(await getWorks(null));
+        } else {
+          setUser(null);
+          setAuthState('unauthed');
+          setPage('dashboard');
+        }
       }
-    }
-  }, [isLoaded, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+    });
+
+    return unsub;
+  }, []);
 
   async function refreshPoints() {
-    if (!clerkUser?.id) return;
-    setMyPoints(await getMyPoints(clerkUser.id));
+    if (!user?.uid) return;
+    setMyPoints(await getMyPoints(user.uid));
   }
 
   function handleGuest() {
@@ -152,7 +128,7 @@ export default function App() {
   }
 
   function handleWorkUpdate(updated) {
-    setWorks(prev => prev.map(w => w.id === updated.id ? updated : w));
+    setWorks(prev => prev.map(work => work.id === updated.id ? updated : work));
     if (openWork?.id === updated.id) setOpenWork(updated);
   }
 
@@ -161,10 +137,16 @@ export default function App() {
     localStorage.removeItem(GUEST_KEY);
     sessionStorage.removeItem(NAV_KEY);
     setAuthState('unauthed');
-    setWorks([]); setWorkspaces([]); setMyPoints(null);
-    setOpenWork(null); setPublicUid(null); setPage('dashboard');
+    setUser(null);
+    setWorks([]);
+    setWorkspaces([]);
+    setMyPoints(null);
+    setOpenWork(null);
+    setPublicUid(null);
+    setPage('dashboard');
+
     if (authState !== 'guest') {
-      try { await clerkSignOut(); } catch (e) {}
+      try { await signOut(auth); } catch (e) {}
     }
   }
 
@@ -180,20 +162,21 @@ export default function App() {
   }
 
   function goBack() {
-    if (page === 'work' && clerkUser) refreshPoints();
-    setPublicUid(null); setOpenWork(null);
+    if (page === 'work' && user) refreshPoints();
+    setPublicUid(null);
+    setOpenWork(null);
     setPage('dashboard');
   }
 
   function toggleSidebar() {
-    setSidebarCollapsed(c => {
-      const next = !c;
+    setSidebarCollapsed(collapsed => {
+      const next = !collapsed;
       localStorage.setItem(SIDEBAR_KEY, next);
       return next;
     });
   }
 
-  if ((authState === 'loading' || !isLoaded) && !clerkTimedOut) {
+  if (authState === 'loading') {
     return (
       <div className="app" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -204,16 +187,7 @@ export default function App() {
     );
   }
 
-  // Use Clerk user as the user object; add convenience shim for legacy field names
-  const user = clerkUser ? {
-    ...clerkUser,
-    uid: clerkUser.id,                    // legacy shim
-    displayName: clerkUser.fullName,       // legacy shim
-    email: clerkUser.primaryEmailAddress?.emailAddress, // legacy shim
-    photoURL: clerkUser.imageUrl,          // legacy shim
-  } : null;
-
-  const uid      = user?.id || null;
+  const uid = user?.uid || null;
   const loggedIn = authState === 'authed' || authState === 'guest';
   const showSidebar = loggedIn && page !== 'work';
 
@@ -260,7 +234,7 @@ export default function App() {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!loggedIn ? (
-            <AuthScreen onGuest={handleGuest} isLoaded={isLoaded} clerkTimedOut={clerkTimedOut} />
+            <AuthScreen onGuest={handleGuest} />
           ) : page === 'work' && openWork ? (
             <WorkPage key={openWork.id} work={openWork} uid={uid} myPoints={myPoints} onBack={goBack} onWorkUpdate={handleWorkUpdate} />
           ) : page === 'profile' ? (
@@ -270,7 +244,7 @@ export default function App() {
           ) : page === 'settings' ? (
             <SettingsPage user={user} myPoints={myPoints} onPointsRefresh={refreshPoints} />
           ) : page === 'publicProfile' && publicUid ? (
-            <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.fullName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
+            <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.displayName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
           ) : page === 'pomodoro' ? (
             <PomodoroTimer works={works} onWorkUpdate={handleWorkUpdate} uid={uid} />
           ) : page === 'expense-tracker' ? (
