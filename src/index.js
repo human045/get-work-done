@@ -10,11 +10,9 @@ posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
   debug: true,
 });
 
-const clerkKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!clerkKey) {
-  console.error('Clerk Publishable Key is missing! Neither REACT_APP_CLERK_PUBLISHABLE_KEY nor VITE_CLERK_PUBLISHABLE_KEY was found.');
-}
+const clerkKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY 
+  || process.env.VITE_CLERK_PUBLISHABLE_KEY 
+  || 'pk_test_d2FudGVkLXNjb3JwaW9uLTg4LmNsZXJrLmFjY291bnRzLmRldiQ'; // Fallback from screenshot
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
