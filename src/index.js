@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import posthog from 'posthog-js';
 import App from './App';
+import { ClerkProvider } from '@clerk/react';
 
 posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
   api_host: 'https://eu.i.posthog.com',
@@ -10,4 +11,10 @@ posthog.init('phc_SS5g62UUVqA4fgyCprePiSmV0HvsQ7pl6eyFgQhPmMg', {
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<React.StrictMode><App /></React.StrictMode>);
+root.render(
+  <React.StrictMode>
+    <ClerkProvider afterSignOutUrl="/">
+      <App />
+    </ClerkProvider>
+  </React.StrictMode>
+);

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import posthog from 'posthog-js';
-import { auth, onAuthStateChanged } from './firebase';
+import { useUser, useAuth } from '@clerk/react';
 import { getWorks, getWorkspaces } from './storage';
 import { applyTheme } from './themes';
 import { ensureLeaderboardEntry, getMyPoints } from './points';
+import { bridgeToFirebase } from './clerkFirebaseBridge';
 import './App.css';
 
 import Topbar from './components/Topbar';
@@ -28,8 +29,11 @@ const SIDEBAR_KEY = 'gwd_sidebar';
 
 function getInitials(user) {
   if (!user) return 'G';
-  if (user.displayName) return user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  return user.email?.[0]?.toUpperCase() || 'U';
+  // Support both Clerk user shape and legacy Firebase shape
+  const name = user.fullName || user.displayName;
+  if (name) return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const email = user.primaryEmailAddress?.emailAddress || user.email;
+  return email?.[0]?.toUpperCase() || 'U';
 }
 
 function readNav() {
@@ -39,8 +43,12 @@ function readNav() {
 function saveNav(state) { sessionStorage.setItem(NAV_KEY, JSON.stringify(state)); }
 
 export default function App() {
+  // ── Clerk auth ──────────────────────────────────────────────────
+  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+  const { signOut: clerkSignOut } = useAuth();
+
+  // ── Local state ─────────────────────────────────────────────────
   const [authState, setAuthState]   = useState('loading');
-  const [user, setUser]             = useState(null);
   const [works, setWorks]           = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [myPoints, setMyPoints]     = useState(null);
@@ -63,40 +71,54 @@ export default function App() {
 
   useEffect(() => { applyTheme(theme); localStorage.setItem(THEME_KEY, theme); }, [theme]);
 
+  // ── Auth effect — driven by Clerk ───────────────────────────────
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        setUser(u); setAuthState('authed');
-        posthog.identify(u.uid, { name: u.displayName || u.email?.split('@')[0] });
-        const [loaded, wss] = await Promise.all([getWorks(u.uid), getWorkspaces(u.uid)]);
-        setWorks(loaded);
-        setWorkspaces(wss);
-        await ensureLeaderboardEntry(u.uid, u.displayName || u.email?.split('@')[0], getInitials(u));
-        setMyPoints(await getMyPoints(u.uid));
+    if (!isLoaded) return; // Clerk still initialising
 
-        const nav = readNav();
-        if (nav.page === 'work' && nav.workId) {
-          const work = loaded.find(w => w.id === nav.workId);
-          if (work) setOpenWork(work); else setPage('dashboard');
-        }
-        if (nav.page === 'publicProfile' && nav.publicUid) setPublicUid(nav.publicUid);
-      } else {
-        const isGuest = localStorage.getItem(GUEST_KEY) === '1';
-        if (isGuest) {
-          setUser(null); setAuthState('guest');
-          setWorks(await getWorks(null));
-        } else {
-          setUser(null); setAuthState('unauthed');
-          setPage('dashboard');
-        }
+    async function onSignedIn() {
+      // Bridge to Firebase so Firestore rules (request.auth != null) pass
+      await bridgeToFirebase();
+
+      setAuthState('authed');
+
+      const uid = clerkUser.id; // Clerk userId is the Firestore key
+      const displayName = clerkUser.fullName
+        || clerkUser.primaryEmailAddress?.emailAddress?.split('@')[0]
+        || 'User';
+
+      posthog.identify(uid, { name: displayName });
+
+      const [loaded, wss] = await Promise.all([getWorks(uid), getWorkspaces(uid)]);
+      setWorks(loaded);
+      setWorkspaces(wss);
+      await ensureLeaderboardEntry(uid, displayName, getInitials(clerkUser));
+      setMyPoints(await getMyPoints(uid));
+
+      const nav = readNav();
+      if (nav.page === 'work' && nav.workId) {
+        const work = loaded.find(w => w.id === nav.workId);
+        if (work) setOpenWork(work); else setPage('dashboard');
       }
-    });
-    return unsub;
-  }, []);
+      if (nav.page === 'publicProfile' && nav.publicUid) setPublicUid(nav.publicUid);
+    }
+
+    if (isSignedIn) {
+      onSignedIn();
+    } else {
+      const isGuest = localStorage.getItem(GUEST_KEY) === '1';
+      if (isGuest) {
+        setAuthState('guest');
+        getWorks(null).then(setWorks);
+      } else {
+        setAuthState('unauthed');
+        setPage('dashboard');
+      }
+    }
+  }, [isLoaded, isSignedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function refreshPoints() {
-    if (!user?.uid) return;
-    setMyPoints(await getMyPoints(user.uid));
+    if (!clerkUser?.id) return;
+    setMyPoints(await getMyPoints(clerkUser.id));
   }
 
   function handleGuest() {
@@ -112,17 +134,19 @@ export default function App() {
     if (openWork?.id === updated.id) setOpenWork(updated);
   }
 
-  function handleSignOut() {
+  async function handleSignOut() {
     posthog.reset();
     localStorage.removeItem(GUEST_KEY);
     sessionStorage.removeItem(NAV_KEY);
     setAuthState('unauthed');
-    setUser(null); setWorks([]); setWorkspaces([]); setMyPoints(null);
+    setWorks([]); setWorkspaces([]); setMyPoints(null);
     setOpenWork(null); setPublicUid(null); setPage('dashboard');
+    if (authState !== 'guest') {
+      try { await clerkSignOut(); } catch (e) {}
+    }
   }
 
   function openWorkPage(work) {
-    // stamp updatedAt for recents
     const stamped = { ...work, updatedAt: Date.now() };
     setOpenWork(stamped);
     setPage('work', { workId: work.id });
@@ -134,7 +158,7 @@ export default function App() {
   }
 
   function goBack() {
-    if (page === 'work' && user) refreshPoints();
+    if (page === 'work' && clerkUser) refreshPoints();
     setPublicUid(null); setOpenWork(null);
     setPage('dashboard');
   }
@@ -147,7 +171,7 @@ export default function App() {
     });
   }
 
-  if (authState === 'loading') {
+  if (authState === 'loading' || !isLoaded) {
     return (
       <div className="app" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -158,7 +182,16 @@ export default function App() {
     );
   }
 
-  const uid      = user?.uid || null;
+  // Use Clerk user as the user object; add convenience shim for legacy field names
+  const user = clerkUser ? {
+    ...clerkUser,
+    uid: clerkUser.id,                    // legacy shim
+    displayName: clerkUser.fullName,       // legacy shim
+    email: clerkUser.primaryEmailAddress?.emailAddress, // legacy shim
+    photoURL: clerkUser.imageUrl,          // legacy shim
+  } : null;
+
+  const uid      = user?.id || null;
   const loggedIn = authState === 'authed' || authState === 'guest';
   const showSidebar = loggedIn && page !== 'work';
 
@@ -181,10 +214,8 @@ export default function App() {
       />
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Sidebar overlay for mobile */}
         <div className={`sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)} />
 
-        {/* Sidebar */}
         {showSidebar && (
           <Sidebar
             collapsed={sidebarCollapsed}
@@ -199,11 +230,10 @@ export default function App() {
             setPage={setPage}
             onOpenWork={openWorkPage}
             onNewWork={() => { setShowAddWork(true); setMobileMenuOpen(false); }}
-            onNewWorkspace={() => {/* handled inside Dashboard/WorkspaceBar */}}
+            onNewWorkspace={() => {}}
           />
         )}
 
-        {/* Main content */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!loggedIn ? (
             <AuthScreen onGuest={handleGuest} />
@@ -216,7 +246,7 @@ export default function App() {
           ) : page === 'settings' ? (
             <SettingsPage user={user} myPoints={myPoints} onPointsRefresh={refreshPoints} />
           ) : page === 'publicProfile' && publicUid ? (
-            <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.displayName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
+            <PublicProfilePage targetUid={publicUid} myUid={uid} myName={user?.fullName || user?.email?.split('@')[0] || 'User'} myInitials={getInitials(user)} />
           ) : page === 'pomodoro' ? (
             <PomodoroTimer works={works} onWorkUpdate={handleWorkUpdate} uid={uid} />
           ) : page === 'expense-tracker' ? (
@@ -244,7 +274,7 @@ export default function App() {
       {loggedIn && (
         <FriendsPanel user={user} isGuest={authState === 'guest'} myPoints={myPoints} onViewProfile={openPublicProfile} />
       )}
-      
+
       {showSidebar && (
         <BottomNav page={page} setPage={setPage} onMenuToggle={() => setMobileMenuOpen(true)} />
       )}

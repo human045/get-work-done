@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Palette, LogOut, ArrowLeft, User, Trophy, Moon, Sun, Settings, Menu } from 'lucide-react';
-import { auth, signOut } from '../firebase';
 import { themes } from '../themes';
 
 export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBack, onSignOut, onOpenProfile, onOpenLeaderboard, onOpenSettings, myPoints, onHome, onMenuToggle }) {
@@ -26,7 +25,6 @@ export default function Topbar({ user, isGuest, theme, setTheme, showBack, onBac
 
   async function handleSignOut() {
     setUserOpen(false);
-    if (!isGuest) { try { await signOut(auth); } catch (e) {} }
     onSignOut();
   }
 

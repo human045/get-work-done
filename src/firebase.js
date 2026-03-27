@@ -4,7 +4,7 @@ import {
   signInWithPopup, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, signOut,
   onAuthStateChanged, updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail, signInAnonymously
 } from 'firebase/auth';
 import {
   getFirestore, doc, setDoc, getDoc, deleteDoc,
